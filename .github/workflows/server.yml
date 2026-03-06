@@ -18,7 +18,7 @@ on:
 
 jobs:
   build_folia:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -34,16 +34,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd folia && gradlew shadowJar
+        chmod +x link.sh && ./link.sh && cd folia && chmod +x gradlew && ./gradlew shadowJar
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_folia"
         path: build/libs/
+        
   build_paper:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -59,16 +59,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd paper && gradlew shadowJar
+        chmod +x link.sh && ./link.sh && cd paper && chmod +x gradlew && ./gradlew shadowJar
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_paper"
         path: build/libs/
+        
   build_velocity:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -84,16 +84,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd server_top && gradlew shadowJar
+        chmod +x link.sh && ./link.sh && cd server_top && chmod +x gradlew && ./gradlew shadowJar
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_bungeecord_velocity"
         path: build/libs/
+        
   build_fabric_1_16_5:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -109,16 +109,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd fabric_1_16_5 && gradlew build
+        chmod +x link.sh && ./link.sh && cd fabric_1_16_5 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_fabric_1_16_5"
         path: build/libs/
+        
   build_fabric_1_20_1:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -134,16 +134,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd fabric_1_20_1 && gradlew build
+        chmod +x link.sh && ./link.sh && cd fabric_1_20_1 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_fabric_1_20_1"
         path: build/libs/
+        
   build_fabric_1_21:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -159,16 +159,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd fabric_1_21 && gradlew build
+        chmod +x link.sh && ./link.sh && cd fabric_1_21 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_fabric_1_21"
         path: build/libs/
+        
   build_fabric_1_21_6:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -184,16 +184,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd fabric_1_21_6 && gradlew build
+        chmod +x link.sh && ./link.sh && cd fabric_1_21_6 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_fabric_1_21_6"
         path: build/libs/
+        
   build_fabric_1_21_11:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -209,16 +209,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd fabric_1_21_11 && gradlew build
+        chmod +x link.sh && ./link.sh && cd fabric_1_21_11 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_fabric_1_21_11"
         path: build/libs/
+        
   # build_fabric_26_1:
-  #   runs-on: windows-latest
+  #   runs-on: ubuntu-latest
   #   permissions:
   #     contents: read
   #   steps:
@@ -234,16 +234,16 @@ jobs:
   #   - name: Setup Gradle
   #     uses: gradle/actions/setup-gradle@v3 # v3.1.0
   #   - name: build
-  #     shell: cmd
   #     run: |
-  #       link.cmd && cd fabric_26_1 && gradlew build
+  #       chmod +x link.sh && ./link.sh && cd fabric_26_1 && chmod +x gradlew && ./gradlew build
   #   - name: update
   #     uses: actions/upload-artifact@v4
   #     with:
   #       name: "allmusic_server_fabric_26_1"
   #       path: build/libs/
+        
   build_forge_1_7_10:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -259,16 +259,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd forge_1_7_10 && gradlew build
+        chmod +x link.sh && ./link.sh && cd forge_1_7_10 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_forge_1_7_10"
         path: build/libs/
+        
   build_forge_1_12_2:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -284,16 +284,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd forge_1_12_2 && gradlew build
+        chmod +x link.sh && ./link.sh && cd forge_1_12_2 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_forge_1_12_2"
         path: build/libs/
+        
   build_forge_1_16_5:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -309,16 +309,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd forge_1_16_5 && gradlew build
+        chmod +x link.sh && ./link.sh && cd forge_1_16_5 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_forge_1_16_5"
         path: build/libs/
+        
   build_forge_1_20_1:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -334,16 +334,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd forge_1_20_1 && gradlew build
+        chmod +x link.sh && ./link.sh && cd forge_1_20_1 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_forge_1_20_1"
         path: build/libs/
+        
   build_neoforge_1_21:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -359,16 +359,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd neoforge_1_21 && gradlew build
+        chmod +x link.sh && ./link.sh && cd neoforge_1_21 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_neoforge_1_21"
         path: build/libs/
+        
   build_neoforge_1_21_6:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -384,16 +384,16 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd neoforge_1_21_6 && gradlew build
+        chmod +x link.sh && ./link.sh && cd neoforge_1_21_6 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
         name: "allmusic_server_neoforge_1_21_6"
         path: build/libs/
+        
   build_neoforge_1_21_11:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -409,9 +409,8 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
-      shell: cmd
       run: |
-        link.cmd && cd neoforge_1_21_11 && gradlew build
+        chmod +x link.sh && ./link.sh && cd neoforge_1_21_11 && chmod +x gradlew && ./gradlew build
     - name: update
       uses: actions/upload-artifact@v4
       with:
