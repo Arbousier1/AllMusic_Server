@@ -12,17 +12,14 @@ import com.google.common.io.ByteStreams;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 public class PluginMessage implements PluginMessageListener {
-    public static int size;
-    public static String allList;
-    public static boolean update = false;
-    private static ScheduledExecutorService service;
+    public static volatile int size;
+    public static volatile String allList;
+    public static volatile boolean update = false;
+    private static BukkitTask clearTask;
     private final TopSongInfoObj info;
     private final TopLyricSave lyric;
 
@@ -30,30 +27,37 @@ public class PluginMessage implements PluginMessageListener {
         info = (TopSongInfoObj) PlayMusic.nowPlayMusic;
         lyric = (TopLyricSave) PlayMusic.lyric;
 
-        service = Executors.newSingleThreadScheduledExecutor();
-        service.scheduleAtFixedRate(PluginMessage::clear, 0, 30, TimeUnit.SECONDS);
+        clearTask = Bukkit.getScheduler().runTaskTimer(AllMusicBukkit.plugin, PluginMessage::clear, 0L, 20L * 30);
     }
 
     private static void clear() {
         update = false;
     }
 
-    private static void sendPack(ByteArrayDataOutput out) {
+    private static void sendPack(byte[] data) {
+        if (!Bukkit.isPrimaryThread()) {
+            Bukkit.getScheduler().runTask(AllMusicBukkit.plugin, () -> sendPack(data));
+            return;
+        }
         Player player = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
         if (player == null)
             return;
-        player.sendPluginMessage(AllMusicBukkit.plugin, AllMusic.channelBC, out.toByteArray());
+        player.sendPluginMessage(AllMusicBukkit.plugin, AllMusic.channelBC, data);
     }
 
     public static void startUpdate() {
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeInt(255);
         out.writeUTF("allmusic");
-        sendPack(out);
+        sendPack(out.toByteArray());
     }
 
     public void stop() {
-        service.shutdownNow();
+        if (clearTask != null) {
+            clearTask.cancel();
+            clearTask = null;
+        }
+        clear();
     }
 
     @Override
@@ -111,13 +115,13 @@ public class PluginMessage implements PluginMessageListener {
                 out.writeUTF(uuid);
                 if (AllMusic.economy == null) {
                     out.write(0);
-                    sendPack(out);
+                    sendPack(out.toByteArray());
                 } else if (!AllMusic.economy.check(name, cost)) {
                     out.write(1);
-                    sendPack(out);
+                    sendPack(out.toByteArray());
                 } else {
                     out.write(2);
-                    sendPack(out);
+                    sendPack(out.toByteArray());
                 }
                 break;
             }
@@ -131,13 +135,13 @@ public class PluginMessage implements PluginMessageListener {
                 out.writeUTF(uuid);
                 if (AllMusic.economy == null) {
                     out.write(0);
-                    sendPack(out);
+                    sendPack(out.toByteArray());
                 } else if (!AllMusic.economy.cost(name, cost)) {
                     out.write(1);
-                    sendPack(out);
+                    sendPack(out.toByteArray());
                 } else {
                     out.write(2);
-                    sendPack(out);
+                    sendPack(out.toByteArray());
                 }
                 break;
             }

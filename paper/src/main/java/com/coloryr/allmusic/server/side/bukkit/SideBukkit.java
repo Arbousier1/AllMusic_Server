@@ -22,6 +22,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 public class SideBukkit extends BaseSide {
     private static Class ByteBufC;
@@ -192,24 +194,22 @@ public class SideBukkit extends BaseSide {
     @Override
     public boolean onMusicPlay(SongInfoObj obj) {
         MusicPlayEvent event = new MusicPlayEvent(obj);
-        Bukkit.getScheduler().callSyncMethod(AllMusicBukkit.plugin, () -> {
+        return callSync(() -> {
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancel()) {
                 FunCore.addMusic();
             }
-            return event;
-        });
-        return event.isCancel();
+            return event.isCancel();
+        }, "music play event");
     }
 
     @Override
     public boolean onMusicAdd(Object obj, PlayerAddMusicObj music) {
         MusicAddEvent event = new MusicAddEvent(music, (CommandSender) obj);
-        Bukkit.getScheduler().callSyncMethod(AllMusicBukkit.plugin, () -> {
+        return callSync(() -> {
             Bukkit.getPluginManager().callEvent(event);
-            return event;
-        });
-        return event.isCancel();
+            return event.isCancel();
+        }, "music add event");
     }
 
     private void send(Player players, byte[] data) {
@@ -244,5 +244,24 @@ public class SideBukkit extends BaseSide {
                 break;
         }
         return buf;
+    }
+
+    private boolean callSync(Callable<Boolean> task, String name) {
+        try {
+            if (Bukkit.isPrimaryThread()) {
+                return task.call();
+            }
+            return Bukkit.getScheduler().callSyncMethod(AllMusicBukkit.plugin, task).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            AllMusic.log.data("<light_purple>[AllMusic3]<red>" + name + " interrupted");
+        } catch (ExecutionException e) {
+            AllMusic.log.data("<light_purple>[AllMusic3]<red>" + name + " failed");
+            e.printStackTrace();
+        } catch (Exception e) {
+            AllMusic.log.data("<light_purple>[AllMusic3]<red>" + name + " failed");
+            e.printStackTrace();
+        }
+        return false;
     }
 }
