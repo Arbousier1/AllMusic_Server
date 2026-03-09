@@ -222,7 +222,7 @@ public class PlayMusic {
             try {
                 PlayerAddMusicObj obj = tasks.poll();
                 if (obj != null) {
-                    IMusicApi api = AllMusic.MUSIC_APIS.get(obj.api);
+                    IMusicApi api = AllMusic.getMusicApi(obj.api);
                     if (api != null) {
                         addMusic(obj.sender, obj.id, api, obj.name, obj.isDefault);
                     }

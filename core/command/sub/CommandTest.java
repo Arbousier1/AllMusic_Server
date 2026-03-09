@@ -17,37 +17,38 @@ public class CommandTest extends ACommand {
         IMusicApi api = null;
 
         if (args.length == 2) {
-            api = AllMusic.MUSIC_APIS.get(AllMusic.getConfig().defaultApi);
+            api = AllMusic.getMusicApi(AllMusic.getConfig().defaultApi);
             musicID = args[1];
         } else if (args.length == 3) {
-            api = AllMusic.MUSIC_APIS.get(args[1]);
+            api = AllMusic.getMusicApi(args[1]);
             musicID = args[2];
         } else {
-            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>错误的指令");
+            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Invalid command");
         }
 
         if (api == null) {
-            AllMusic.side.sendMessage(sender, AllMusic.getMessage().musicPlay.error2);
+            AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
             return;
         }
 
+        musicID = api.getMusicId(musicID);
+
         if (api.checkId(musicID)) {
-            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>正在测试解析" + args[1]);
+            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Testing song " + musicID);
             try {
-                SongInfoObj info = api.getMusic(args[1], "test", false);
+                SongInfoObj info = api.getMusic(musicID, "test", false);
                 if (info == null) {
-                    AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>测试解析失败");
+                    AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Test failed");
                     return;
                 }
-                AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>音乐名称 " + info.getName());
-                AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>音乐作者 " + info.getAuthor());
-                String url = api.getPlayUrl(args[1]);
-                AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>播放地址 " + url);
+                AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Music name " + info.getName());
+                AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Music author " + info.getAuthor());
+                String url = api.getPlayUrl(musicID);
+                AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Play url " + url);
             } catch (Exception e) {
-                AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>测试解析错误");
+                AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Test error");
                 e.printStackTrace();
             }
         }
     }
 }
-

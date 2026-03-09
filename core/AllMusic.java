@@ -36,6 +36,47 @@ public class AllMusic {
 
     public static final Map<String, IMusicApi> MUSIC_APIS = new HashMap<>();
 
+    private static String normalizeApiKey(String api) {
+        if (api == null) {
+            return null;
+        }
+        return api.trim().toLowerCase(Locale.ROOT);
+    }
+
+    public static void registerMusicApi(IMusicApi api, String... aliases) {
+        if (api == null) {
+            return;
+        }
+
+        String id = normalizeApiKey(api.getId());
+        if (id != null && !id.isEmpty()) {
+            MUSIC_APIS.put(id, api);
+        }
+
+        for (String alias : aliases) {
+            String key = normalizeApiKey(alias);
+            if (key != null && !key.isEmpty()) {
+                MUSIC_APIS.put(key, api);
+            }
+        }
+    }
+
+    public static IMusicApi getMusicApi(String api) {
+        String key = normalizeApiKey(api);
+        if (key == null || key.isEmpty()) {
+            return null;
+        }
+        return MUSIC_APIS.get(key);
+    }
+
+    public static String getMusicApiList() {
+        return String.join(", ", new TreeSet<>(MUSIC_APIS.keySet()));
+    }
+
+    public static String getUnknownApiMessage() {
+        return getMessage().musicPlay.error2 + " 可用: " + getMusicApiList();
+    }
+
     /**
      * 客户端插件信道名
      */
@@ -341,7 +382,7 @@ public class AllMusic {
         MusicHttpClient.init();
 
         IMusicApi api = new NetiApiMain();
-        MUSIC_APIS.put(api.getId(), api);
+        registerMusicApi(api, "163", "netease", "wangyi", "wy");
 
         PlayMusic.start();
         PlayRuntime.start();

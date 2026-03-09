@@ -221,7 +221,7 @@ public class PlayRuntime {
                     } else if (AllMusic.side.needPlay(true) && PlayMusic.getIdleListSize() > 0) {
                         MusicObj music = PlayMusic.getIdleMusic();
                         if (music != null) {
-                            IMusicApi api = AllMusic.MUSIC_APIS.get(music.api);
+                            IMusicApi api = AllMusic.getMusicApi(music.api);
                             if (api != null && !api.isBusy()) {
                                 PlayMusic.addMusic(null, music.id, api, AllMusic.getMessage().custom.idle, true);
                             }
@@ -239,7 +239,11 @@ public class PlayRuntime {
                         continue;
                     }
 
-                    IMusicApi api = AllMusic.MUSIC_APIS.get(PlayMusic.nowPlayMusic.getApi());
+                    IMusicApi api = AllMusic.getMusicApi(PlayMusic.nowPlayMusic.getApi());
+                    if (api == null) {
+                        clear();
+                        continue;
+                    }
 
                     PlayMusic.url = PlayMusic.nowPlayMusic.getPlayerUrl() == null ?
                             api.getPlayUrl(PlayMusic.nowPlayMusic.getID()) :

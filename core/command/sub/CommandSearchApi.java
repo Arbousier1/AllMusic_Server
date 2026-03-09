@@ -22,7 +22,7 @@ public class CommandSearchApi extends ACommand {
         }
 
         if (args.length < 2) {
-            AllMusic.side.sendMessage(sender, AllMusic.getMessage().musicPlay.error2);
+            AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
             return;
         }
 

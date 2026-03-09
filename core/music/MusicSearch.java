@@ -19,10 +19,10 @@ public class MusicSearch {
             try {
                 PlayerAddMusicObj obj = tasks.poll();
                 if (obj != null) {
-                    IMusicApi api = AllMusic.MUSIC_APIS.get(obj.api);
+                    IMusicApi api = AllMusic.getMusicApi(obj.api);
                     if (api == null) {
-                        AllMusic.side.sendMessageTask(obj.sender, AllMusic.getMessage().musicPlay.error2);
-                        return;
+                        AllMusic.side.sendMessageTask(obj.sender, AllMusic.getUnknownApiMessage());
+                        continue;
                     }
                     SearchPageObj search = api.search(obj.args, obj.isDefault);
                     if (search == null)

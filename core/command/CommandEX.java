@@ -73,12 +73,18 @@ public class CommandEX {
      * @param isDefault 是否是默认点歌方式
      */
     public static void searchMusic(Object sender, String name, String[] args, boolean isDefault) {
+        IMusicApi api = AllMusic.getMusicApi(AllMusic.getConfig().defaultApi);
+        if (api == null) {
+            AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
+            return;
+        }
+
         PlayerAddMusicObj obj = new PlayerAddMusicObj();
         obj.sender = sender;
         obj.name = name;
         obj.args = args;
         obj.isDefault = isDefault;
-        obj.api = AllMusic.getConfig().defaultApi;
+        obj.api = api.getId();
 
         if (AllMusic.side.onMusicAdd(sender, obj)) {
             AllMusic.side.sendMessage(sender, AllMusic.getMessage().addMusic.cancel);
@@ -97,13 +103,19 @@ public class CommandEX {
      * @param isDefault 是否是默认点歌方式
      */
     public static void searchMusicApi(Object sender, String name, String[] args, boolean isDefault) {
+        IMusicApi api = AllMusic.getMusicApi(args[0]);
+        if (api == null) {
+            AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
+            return;
+        }
+
         PlayerAddMusicObj obj = new PlayerAddMusicObj();
         obj.sender = sender;
         obj.name = name;
         obj.args = new String[args.length - 1];
         System.arraycopy(args, 1, obj.args, 0, obj.args.length);
         obj.isDefault = isDefault;
-        obj.api = args[0];
+        obj.api = api.getId();
 
         if (AllMusic.side.onMusicAdd(sender, obj)) {
             AllMusic.side.sendMessage(sender, AllMusic.getMessage().addMusic.cancel);
@@ -167,9 +179,9 @@ public class CommandEX {
     public static void addMusic(Object sender, String name, String api, String arg) {
         String musicID;
 
-        IMusicApi api1 = AllMusic.MUSIC_APIS.get(api);
+        IMusicApi api1 = AllMusic.getMusicApi(api);
         if (api1 == null) {
-            AllMusic.side.sendMessage(sender, AllMusic.getMessage().musicPlay.error2);
+            AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
             return;
         }
 
@@ -180,7 +192,7 @@ public class CommandEX {
                 AllMusic.side.sendMessageTask(sender, AllMusic.getMessage().addMusic.listFull);
             } else if (DataSql.checkBanMusic(musicID)) {
                 AllMusic.side.sendMessageTask(sender, AllMusic.getMessage().addMusic.banMusic);
-            } else if (PlayMusic.haveMusic(musicID, api)) {
+            } else if (PlayMusic.haveMusic(musicID, api1.getId())) {
                 AllMusic.side.sendMessageTask(sender, AllMusic.getMessage().addMusic.existMusic);
             } else if (PlayMusic.isPlayerMax(name)) {
                 AllMusic.side.sendMessageTask(sender, AllMusic.getMessage().addMusic.playerToMany);
@@ -201,7 +213,7 @@ public class CommandEX {
                     obj.id = musicID;
                     obj.name = name;
                     obj.isDefault = false;
-                    obj.api = api;
+                    obj.api = api1.getId();
 
                     if (AllMusic.side.onMusicAdd(sender, obj)) {
                         AllMusic.side.sendMessageTask(sender, AllMusic.getMessage().addMusic.cancel);

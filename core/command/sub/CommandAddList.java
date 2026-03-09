@@ -16,17 +16,17 @@ public class CommandAddList extends ACommand {
         IMusicApi api = null;
 
         if (args.length == 2) {
-            api = AllMusic.MUSIC_APIS.get(AllMusic.getConfig().defaultApi);
+            api = AllMusic.getMusicApi(AllMusic.getConfig().defaultApi);
             musicID = args[1];
         } else if (args.length == 3) {
-            api = AllMusic.MUSIC_APIS.get(args[1]);
+            api = AllMusic.getMusicApi(args[1]);
             musicID = args[2];
         } else {
             AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>错误的指令");
         }
 
         if (api == null) {
-            AllMusic.side.sendMessage(sender, AllMusic.getMessage().musicPlay.error2);
+            AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
             return;
         }
 

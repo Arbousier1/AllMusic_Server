@@ -13,7 +13,7 @@ public class AllMusicApi {
      * @return 返回序号
      */
     public static int registerApi(IMusicApi api) {
-        AllMusic.MUSIC_APIS.put(api.getId(), api);
+        AllMusic.registerMusicApi(api);
         return AllMusic.MUSIC_APIS.size() - 1;
     }
 
@@ -23,7 +23,7 @@ public class AllMusicApi {
      * @return 音乐API
      */
     public static IMusicApi getApiMusic() {
-        return AllMusic.MUSIC_APIS.get(AllMusic.getConfig().defaultApi);
+        return AllMusic.getMusicApi(AllMusic.getConfig().defaultApi);
     }
 
     /**
@@ -33,7 +33,7 @@ public class AllMusicApi {
      * @return 音乐API
      */
     public static IMusicApi getApiMusic(String api) {
-        return AllMusic.MUSIC_APIS.get(api);
+        return AllMusic.getMusicApi(api);
     }
 
     /**
