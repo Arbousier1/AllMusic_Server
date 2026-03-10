@@ -107,6 +107,7 @@ public final class QqApiQrLogin {
                 if (!same(lastCode, status.code)) {
                     lastCode = status.code;
                     logStatus(status);
+                    notifyStatus(sender, status);
                 }
 
                 if ("65".equals(status.code)) {
@@ -290,6 +291,22 @@ public final class QqApiQrLogin {
             builder.append(" msg=").append(status.message);
         }
         AllMusic.log.data(builder.toString());
+    }
+
+    private static void notifyStatus(Object sender, Status status) {
+        if (sender == null || status == null || isBlank(status.code)) {
+            return;
+        }
+
+        if ("67".equals(status.code)) {
+            AllMusic.side.sendMessageTask(sender,
+                    "<light_purple>[AllMusic3]<yellow>QQ scan detected, waiting for confirmation on your phone");
+            return;
+        }
+        if ("0".equals(status.code)) {
+            AllMusic.side.sendMessageTask(sender,
+                    "<light_purple>[AllMusic3]<yellow>QQ login confirmed, saving cookies");
+        }
     }
 
     private static boolean hasLoginCookie() {
