@@ -277,7 +277,7 @@ public class QqMusicApiMain implements IMusicApi {
 
         try {
             String data = unwrapJsonp(res.data);
-            JsonElement element = JsonParser.parseString(data);
+            JsonElement element = new JsonParser().parse(data);
             return element.isJsonObject() ? element.getAsJsonObject() : null;
         } catch (Exception e) {
             AllMusic.log.data("<light_purple>[AllMusic3]<red>QQ Music API response parse failed");
