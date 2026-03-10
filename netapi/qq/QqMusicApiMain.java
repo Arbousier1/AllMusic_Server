@@ -209,8 +209,13 @@ public class QqMusicApiMain implements IMusicApi {
             return null;
         }
 
-        FileInfo info = chooseFile(file, mediaMid);
-        JsonObject root = requestJson(MUSICU_URL, makePlayParams(id, info.fileName), SONG_REFERER + id);
+        int songType = (int) firstLong(song, 0, "type");
+        List<FileInfo> files = buildPlayableFiles(file, mediaMid);
+        if (files.isEmpty()) {
+            return null;
+        }
+
+        JsonObject root = requestJson(MUSICU_URL, makePlayParams(id, songType, files), SONG_REFERER + id);
         if (root == null) {
             return null;
         }
@@ -219,7 +224,8 @@ public class QqMusicApiMain implements IMusicApi {
         }
 
         String sip = firstString(root, "req_0.data.sip.0", "req_1.data.sip.0");
-        String purl = firstString(root, "req_0.data.midurlinfo.0.purl", "req_1.data.midurlinfo.0.purl");
+        JsonArray urls = firstArray(root, "req_0.data.midurlinfo", "req_1.data.midurlinfo");
+        String purl = choosePlayableUrl(urls, files);
         if (isBlank(purl)) {
             return null;
         }
@@ -302,6 +308,7 @@ public class QqMusicApiMain implements IMusicApi {
     private LinkedHashMap<String, String> makeDetailParams(String id) {
         LinkedHashMap<String, String> query = new LinkedHashMap<String, String>();
         query.put("songmid", id);
+        query.put("platform", "yqq");
         query.put("tpl", "yqq_song_detail");
         query.put("format", "json");
         return query;
@@ -350,14 +357,16 @@ public class QqMusicApiMain implements IMusicApi {
         return query;
     }
 
-    private LinkedHashMap<String, String> makePlayParams(String songMid, String fileName) {
+    private LinkedHashMap<String, String> makePlayParams(String songMid, int songType, List<FileInfo> files) {
         LinkedHashMap<String, String> query = new LinkedHashMap<String, String>();
         query.put("format", "json");
-        query.put("data", buildPlayRequestData(songMid, fileName));
+        query.put("platform", "yqq.json");
+        query.put("needNewCode", "0");
+        query.put("data", buildPlayRequestData(songMid, songType, files));
         return query;
     }
 
-    private String buildPlayRequestData(String songMid, String fileName) {
+    private String buildPlayRequestData(String songMid, int songType, List<FileInfo> files) {
         String guid = randomGuid();
         String uin = getQqUin();
         JsonObject root = new JsonObject();
@@ -369,15 +378,17 @@ public class QqMusicApiMain implements IMusicApi {
         JsonArray songMidArray = new JsonArray();
         JsonArray songTypeArray = new JsonArray();
         JsonArray fileNameArray = new JsonArray();
-        songMidArray.add(songMid);
-        songTypeArray.add(0);
-        fileNameArray.add(fileName);
+        for (FileInfo item : files) {
+            songMidArray.add(songMid);
+            songTypeArray.add(songType);
+            fileNameArray.add(item.fileName);
+        }
         param.add("songmid", songMidArray);
         param.add("songtype", songTypeArray);
         param.add("filename", fileNameArray);
         param.addProperty("guid", guid);
         param.addProperty("uin", uin);
-        param.addProperty("loginflag", "0".equals(uin) ? 0 : 1);
+        param.addProperty("loginflag", 1);
         param.addProperty("platform", "20");
         req.add("param", param);
         root.add("req_0", req);
@@ -391,77 +402,98 @@ public class QqMusicApiMain implements IMusicApi {
         return AllMusic.gson.toJson(root);
     }
 
-    private FileInfo chooseFile(JsonObject file, String mediaMid) {
+    private List<FileInfo> buildPlayableFiles(JsonObject file, String mediaMid) {
         List<FileInfo> files = new ArrayList<FileInfo>();
         if (firstLong(file, 0, "size_flac") > 0) {
-            files.add(new FileInfo("F000", ".flac", "flac"));
+            files.add(new FileInfo("F000", ".flac", 999));
         }
         if (firstLong(file, 0, "size_320mp3") > 0) {
-            files.add(new FileInfo("M800", ".mp3", "320"));
+            files.add(new FileInfo("M800", ".mp3", 320));
         }
         if (firstLong(file, 0, "size_192aac") > 0) {
-            files.add(new FileInfo("C600", ".m4a", "192"));
+            files.add(new FileInfo("C600", ".m4a", 192));
         }
         if (firstLong(file, 0, "size_128mp3") > 0) {
-            files.add(new FileInfo("M500", ".mp3", "128"));
+            files.add(new FileInfo("M500", ".mp3", 128));
         }
         if (firstLong(file, 0, "size_96aac") > 0) {
-            files.add(new FileInfo("C400", ".m4a", "96"));
+            files.add(new FileInfo("C400", ".m4a", 96));
         }
         if (firstLong(file, 0, "size_48aac") > 0) {
-            files.add(new FileInfo("C200", ".m4a", "48"));
+            files.add(new FileInfo("C200", ".m4a", 48));
         }
         if (firstLong(file, 0, "size_24aac") > 0) {
-            files.add(new FileInfo("C100", ".m4a", "24"));
+            files.add(new FileInfo("C100", ".m4a", 24));
         }
 
-        String want = normalizeBr();
-        FileInfo selected = null;
         for (FileInfo item : files) {
-            if (want.equals(item.level)) {
-                selected = item;
-                break;
-            }
+            item.fileName = item.prefix + mediaMid + item.ext;
         }
-        if (selected == null && !files.isEmpty()) {
-            selected = files.get(0);
-        }
-        if (selected == null) {
-            selected = new FileInfo("M500", ".mp3", "128");
-        }
-        selected.fileName = selected.prefix + mediaMid + selected.ext;
-        return selected;
+        return files;
     }
 
-    private String normalizeBr() {
+    private String choosePlayableUrl(JsonArray urls, List<FileInfo> files) {
+        if (urls == null || files == null || files.isEmpty()) {
+            return null;
+        }
+
+        int want = resolveBitrateKbps();
+        for (int i = 0; i < files.size() && i < urls.size(); i++) {
+            FileInfo file = files.get(i);
+            if (file.bitrate > want) {
+                continue;
+            }
+            JsonElement item = urls.get(i);
+            if (!item.isJsonObject()) {
+                continue;
+            }
+            String purl = firstString(item.getAsJsonObject(), "purl");
+            if (!isBlank(purl)) {
+                return purl;
+            }
+        }
+
+        for (JsonElement item : urls) {
+            if (!item.isJsonObject()) {
+                continue;
+            }
+            String purl = firstString(item.getAsJsonObject(), "purl");
+            if (!isBlank(purl)) {
+                return purl;
+            }
+        }
+        return null;
+    }
+
+    private int resolveBitrateKbps() {
         String br = AllMusic.getConfig().musicBR;
         if (isBlank(br)) {
-            return "320";
+            return 320;
         }
 
         br = br.trim().toLowerCase(Locale.ROOT);
         if ("999000".equals(br) || "flac".equals(br) || "lossless".equals(br)) {
-            return "flac";
+            return 999;
         }
         if ("320000".equals(br) || "320".equals(br)) {
-            return "320";
+            return 320;
         }
         if ("192000".equals(br) || "192".equals(br)) {
-            return "192";
+            return 192;
         }
         if ("128000".equals(br) || "128".equals(br)) {
-            return "128";
+            return 128;
         }
         if ("96000".equals(br) || "96".equals(br)) {
-            return "96";
+            return 96;
         }
         if ("48000".equals(br) || "48".equals(br)) {
-            return "48";
+            return 48;
         }
         if ("24000".equals(br) || "24".equals(br)) {
-            return "24";
+            return 24;
         }
-        return "320";
+        return 320;
     }
 
     private String joinArgs(String[] args, int start) {
@@ -779,13 +811,13 @@ public class QqMusicApiMain implements IMusicApi {
     private static class FileInfo {
         private final String prefix;
         private final String ext;
-        private final String level;
+        private final int bitrate;
         private String fileName;
 
-        private FileInfo(String prefix, String ext, String level) {
+        private FileInfo(String prefix, String ext, int bitrate) {
             this.prefix = prefix;
             this.ext = ext;
-            this.level = level;
+            this.bitrate = bitrate;
         }
     }
 }
