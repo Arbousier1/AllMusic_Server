@@ -20,6 +20,11 @@ public class SearchPageObj {
         return resData.get(index).id;
     }
 
+    public String getSongApi(int index) {
+        SearchMusicObj item = resData.get(index);
+        return item.api == null || item.api.isEmpty() ? api : item.api;
+    }
+
     public SearchMusicObj getRes(int a) {
         return resData.get(a);
     }
@@ -44,7 +49,7 @@ public class SearchPageObj {
     }
 
     public boolean haveNextPage() {
-        return page != (maxpage - 1);
+        return maxpage > 0 && page != (maxpage - 1);
     }
 
     public boolean haveLastPage() {

@@ -7,6 +7,8 @@ import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.PlayerAddMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -19,12 +21,17 @@ public class MusicSearch {
             try {
                 PlayerAddMusicObj obj = tasks.poll();
                 if (obj != null) {
-                    IMusicApi api = AllMusic.getMusicApi(obj.api);
-                    if (api == null) {
-                        AllMusic.side.sendMessageTask(obj.sender, AllMusic.getUnknownApiMessage());
-                        continue;
+                    SearchPageObj search;
+                    if ("all".equalsIgnoreCase(obj.api)) {
+                        search = searchAll(obj);
+                    } else {
+                        IMusicApi api = AllMusic.getMusicApi(obj.api);
+                        if (api == null) {
+                            AllMusic.side.sendMessageTask(obj.sender, AllMusic.getUnknownApiMessage());
+                            continue;
+                        }
+                        search = api.search(obj.args, obj.isDefault);
                     }
-                    SearchPageObj search = api.search(obj.args, obj.isDefault);
                     if (search == null)
                         AllMusic.side.sendMessageTask(obj.sender, AllMusic.getMessage().search
                                 .cantSearch.replace(ARG.name, obj.isDefault ? obj.args[0] : obj.args[1]));
@@ -56,6 +63,47 @@ public class MusicSearch {
         tasks.add(obj);
     }
 
+    private static SearchPageObj searchAll(PlayerAddMusicObj obj) {
+        List<SearchMusicObj> netease = searchByApi("netapi", obj);
+        List<SearchMusicObj> qq = searchByApi("qq", obj);
+        List<SearchMusicObj> res = new ArrayList<>();
+
+        int max = Math.max(netease.size(), qq.size());
+        for (int i = 0; i < max; i++) {
+            if (i < netease.size()) {
+                res.add(netease.get(i));
+            }
+            if (i < qq.size()) {
+                res.add(qq.get(i));
+            }
+        }
+
+        if (res.isEmpty()) {
+            return null;
+        }
+        return new SearchPageObj(res, Math.max(1, (res.size() + 9) / 10), "all");
+    }
+
+    private static List<SearchMusicObj> searchByApi(String apiName, PlayerAddMusicObj obj) {
+        IMusicApi api = AllMusic.getMusicApi(apiName);
+        if (api == null) {
+            return new ArrayList<>();
+        }
+
+        SearchPageObj page = api.search(obj.args, obj.isDefault);
+        if (page == null) {
+            return new ArrayList<>();
+        }
+
+        List<SearchMusicObj> list = new ArrayList<>();
+        int limit = Math.min(10, page.getIndex() + page.getPage() * 10);
+        for (int i = 0; i < limit; i++) {
+            SearchMusicObj item = page.getRes(i);
+            list.add(new SearchMusicObj(item.id, item.name, item.author, item.al, api.getId()));
+        }
+        return list;
+    }
+
     /**
      * 展示搜歌结果
      *
@@ -75,7 +123,7 @@ public class MusicSearch {
             item = search.getRes(a + search.getPage() * 10);
             info = AllMusic.getMessage().page.choice;
             info = info.replace(ARG.index, "" + (a + 1))
-                    .replace(ARG.musicName, item.name)
+                    .replace(ARG.musicName, formatName(item))
                     .replace(ARG.musicAuthor, item.author)
                     .replace(ARG.musicAl, item.al);
             AllMusic.side.sendMessage(sender, AllMusic.miniMessage(info)
@@ -86,5 +134,18 @@ public class MusicSearch {
                     .append(AllMusic.miniMessageRun(AllMusic.getMessage().page.next, "/music nextpage")));
         }
         AllMusic.side.sendMessage(sender, "");
+    }
+
+    private static String formatName(SearchMusicObj item) {
+        if (item == null || item.api == null || item.api.isEmpty()) {
+            return item == null ? "" : item.name;
+        }
+        String api = item.api;
+        if ("netapi".equalsIgnoreCase(api)) {
+            api = "wy";
+        } else if ("tencent".equalsIgnoreCase(api) || "qqmusic".equalsIgnoreCase(api)) {
+            api = "qq";
+        }
+        return item.name + " [" + api + "]";
     }
 }

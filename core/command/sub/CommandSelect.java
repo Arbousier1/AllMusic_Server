@@ -30,10 +30,12 @@ public class CommandSelect extends ACommand {
                 AllMusic.side.sendMessage(sender, AllMusic.getMessage().search.errorNum);
                 return;
             }
-            String id = obj.getSong((obj.getPage() * 10) + (a - 1));
+            int index = (obj.getPage() * 10) + (a - 1);
+            String id = obj.getSong(index);
+            String api = obj.getSongApi(index);
             AllMusic.side.sendMessage(sender,
                     AllMusic.getMessage().search.choice.replace(ARG.index, "" + a));
-            DataSql.task(() -> CommandEX.addMusic(sender, name, obj.getApi(), id));
+            DataSql.task(() -> CommandEX.addMusic(sender, name, api, id));
             AllMusic.removeSearch(name);
         } else {
             AllMusic.side.sendMessage(sender, AllMusic.getMessage().search.errorNum);

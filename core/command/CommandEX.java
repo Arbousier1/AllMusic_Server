@@ -80,7 +80,8 @@ public class CommandEX {
      */
     public static void searchMusic(Object sender, String name, String[] args, boolean isDefault) {
         IMusicApi api = AllMusic.getMusicApi(AllMusic.getConfig().defaultApi);
-        if (api == null) {
+        IMusicApi qq = AllMusic.getMusicApi("qq");
+        if (api == null && qq == null) {
             AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
             return;
         }
@@ -90,7 +91,7 @@ public class CommandEX {
         obj.name = name;
         obj.args = args;
         obj.isDefault = isDefault;
-        obj.api = api.getId();
+        obj.api = "all";
 
         if (AllMusic.side.onMusicAdd(sender, obj)) {
             AllMusic.side.sendMessage(sender, AllMusic.getMessage().addMusic.cancel);
@@ -109,7 +110,7 @@ public class CommandEX {
      * @param isDefault 是否是默认点歌方式
      */
     public static void searchMusicApi(Object sender, String name, String[] args, boolean isDefault) {
-        IMusicApi api = AllMusic.getMusicApi(args[0]);
+        IMusicApi api = AllMusic.getMusicApi(args[1]);
         if (api == null) {
             AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
             return;
