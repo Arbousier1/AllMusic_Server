@@ -45,7 +45,7 @@ public final class CookieImportApi {
     }
 
     public static List<String> listApis() {
-        return Arrays.asList("netease", "qq", "kugou", "kuwo", "baidu");
+        return Arrays.asList("netease", "qq", "kugou", "kuwo");
     }
 
     public static String normalizeApi(String api) {

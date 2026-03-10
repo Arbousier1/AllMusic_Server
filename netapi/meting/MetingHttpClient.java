@@ -11,6 +11,7 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -61,9 +62,7 @@ public class MetingHttpClient {
             applyHeaders(request, headerMap);
             return execute(request);
         } catch (Exception e) {
-            AllMusic.log.data("<light_purple>[AllMusic3]<red>Meting API request failed");
-            e.printStackTrace();
-            return null;
+            return handleFailure(fullUrl, e);
         }
     }
 
@@ -71,9 +70,7 @@ public class MetingHttpClient {
         try (CloseableHttpResponse response = MusicHttpClient.client.execute(request)) {
             return readResponse(response);
         } catch (Exception e) {
-            AllMusic.log.data("<light_purple>[AllMusic3]<red>Meting API request failed");
-            e.printStackTrace();
-            return null;
+            return handleFailure(request.getUri().toString(), e);
         }
     }
 
@@ -81,9 +78,7 @@ public class MetingHttpClient {
         try (CloseableHttpResponse response = MusicHttpClient.client.execute(request)) {
             return readResponse(response);
         } catch (Exception e) {
-            AllMusic.log.data("<light_purple>[AllMusic3]<red>Meting API request failed");
-            e.printStackTrace();
-            return null;
+            return handleFailure(request.getUri().toString(), e);
         }
     }
 
@@ -169,5 +164,29 @@ public class MetingHttpClient {
         } catch (Exception ignored) {
             return value;
         }
+    }
+
+    private static HttpResObj handleFailure(String url, Exception e) {
+        Throwable root = e;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+
+        if (root instanceof UnknownHostException) {
+            String host = null;
+            try {
+                host = URI.create(url).getHost();
+            } catch (Exception ignored) {
+            }
+            if (host == null || host.isEmpty()) {
+                host = root.getMessage();
+            }
+            AllMusic.log.data("<light_purple>[AllMusic3]<yellow>Meting API host unavailable: " + host);
+            return null;
+        }
+
+        AllMusic.log.data("<light_purple>[AllMusic3]<red>Meting API request failed");
+        e.printStackTrace();
+        return null;
     }
 }

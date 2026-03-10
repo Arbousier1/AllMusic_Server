@@ -14,7 +14,6 @@ import com.coloryr.allmusic.server.core.side.IAllMusicLogger;
 import com.coloryr.allmusic.server.core.sql.DataSql;
 import com.coloryr.allmusic.server.core.sql.IEconomy;
 import com.coloryr.allmusic.server.core.utils.LocalCookieBridge;
-import com.coloryr.allmusic.server.netapi.meting.baidu.BaiduMusicApiMain;
 import com.coloryr.allmusic.server.netapi.meting.kugou.KugouMusicApiMain;
 import com.coloryr.allmusic.server.netapi.meting.kuwo.KuwoMusicApiMain;
 import com.coloryr.allmusic.server.netapi.NetiApiMain;
@@ -404,7 +403,6 @@ public class AllMusic {
         registerMusicApi(new QqMusicApiMain(), "qq", "qqmusic", "tencent");
         registerMusicApi(new KugouMusicApiMain(), "kugou", "kg");
         registerMusicApi(new KuwoMusicApiMain(), "kuwo", "kw");
-        registerMusicApi(new BaiduMusicApiMain(), "baidu", "taihe", "qianqian");
 
         PlayMusic.start();
         PlayRuntime.start();
