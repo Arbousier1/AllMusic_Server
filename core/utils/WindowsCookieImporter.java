@@ -5,8 +5,6 @@ import com.coloryr.allmusic.server.core.objs.CookieObj;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
-import org.sqlite.SQLiteConfig;
-import org.sqlite.SQLiteOpenMode;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -83,7 +81,7 @@ public final class WindowsCookieImporter {
         }
     }
 
-    private static List<CookieObj> readChromiumCookies(BrowserTarget target) throws Exception {
+    private static List<CookieObj> readChromiumCookies(CookieImportApi.Target target) throws Exception {
         List<CookieObj> list = new ArrayList<CookieObj>();
         Exception lastError = null;
         for (BrowserProfile browser : getBrowsers()) {
@@ -112,7 +110,7 @@ public final class WindowsCookieImporter {
         return list;
     }
 
-    private static void readBrowserDb(List<CookieObj> list, File db, byte[] masterKey, BrowserTarget target) throws Exception {
+    private static void readBrowserDb(List<CookieObj> list, File db, byte[] masterKey, CookieImportApi.Target target) throws Exception {
         File temp = null;
         Connection connection = null;
         PreparedStatement statement = null;
@@ -209,10 +207,7 @@ public final class WindowsCookieImporter {
     }
 
     private static Connection openReadOnlyConnection(File file) throws Exception {
-        SQLiteConfig config = new SQLiteConfig();
-        config.setReadOnly(true);
-        config.setOpenMode(SQLiteOpenMode.READONLY);
-        return DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath(), config.toProperties());
+        return DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
     }
 
     private static byte[] readMasterKey(File localState) throws Exception {
