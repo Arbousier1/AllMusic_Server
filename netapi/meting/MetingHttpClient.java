@@ -70,7 +70,7 @@ public class MetingHttpClient {
         try (CloseableHttpResponse response = MusicHttpClient.client.execute(request)) {
             return readResponse(response);
         } catch (Exception e) {
-            return handleFailure(request.getUri().toString(), e);
+            return handleFailure(request.toString(), e);
         }
     }
 
@@ -78,7 +78,7 @@ public class MetingHttpClient {
         try (CloseableHttpResponse response = MusicHttpClient.client.execute(request)) {
             return readResponse(response);
         } catch (Exception e) {
-            return handleFailure(request.getUri().toString(), e);
+            return handleFailure(request.toString(), e);
         }
     }
 
