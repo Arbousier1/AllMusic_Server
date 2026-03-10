@@ -14,6 +14,7 @@ import com.coloryr.allmusic.server.core.side.IAllMusicLogger;
 import com.coloryr.allmusic.server.core.sql.DataSql;
 import com.coloryr.allmusic.server.core.sql.IEconomy;
 import com.coloryr.allmusic.server.netapi.NetiApiMain;
+import com.coloryr.allmusic.server.netapi.qq.QqMusicApiMain;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -26,6 +27,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AllMusic {
     public static final Gson gson = new GsonBuilder()
@@ -34,7 +36,7 @@ public class AllMusic {
             .create();
     public static final Random random = new Random();
 
-    public static final Map<String, IMusicApi> MUSIC_APIS = new HashMap<>();
+    public static final Map<String, IMusicApi> MUSIC_APIS = new ConcurrentHashMap<>();
 
     private static String normalizeApiKey(String api) {
         if (api == null) {
@@ -101,39 +103,39 @@ public class AllMusic {
      * 搜歌结果
      * 玩家名 结果
      */
-    private static final Map<String, SearchPageObj> searchSave = new HashMap<>();
+    private static final Map<String, SearchPageObj> searchSave = new ConcurrentHashMap<>();
     /**
      * 正在播放的玩家
      */
-    private static final Set<String> nowPlayPlayer = new HashSet<>();
+    private static final Set<String> nowPlayPlayer = ConcurrentHashMap.newKeySet();
     /**
      * 日志
      */
-    public static IAllMusicLogger log;
+    public static volatile IAllMusicLogger log;
     /**
      * 服务器端操作
      */
-    public static BaseSide side;
+    public static volatile BaseSide side;
     /**
      * 是否在运行
      */
-    public static boolean isRun;
+    public static volatile boolean isRun;
     /**
      * Cookie对象
      */
-    public static List<CookieObj> cookie;
+    public static volatile List<CookieObj> cookie;
     /**
      * 经济插件对象
      */
-    public static IEconomy economy;
+    public static volatile IEconomy economy;
     /**
      * 配置对象
      */
-    private static ConfigObj config;
+    private static volatile ConfigObj config;
     /**
      * 语言对象
      */
-    private static MessageObj message;
+    private static volatile MessageObj message;
     /**
      * 配置文件
      */
@@ -175,7 +177,7 @@ public class AllMusic {
      * @return 列表
      */
     public static Set<String> getNowPlayPlayer() {
-        return nowPlayPlayer;
+        return Collections.unmodifiableSet(new HashSet<>(nowPlayPlayer));
     }
 
     /**
@@ -383,6 +385,7 @@ public class AllMusic {
 
         IMusicApi api = new NetiApiMain();
         registerMusicApi(api, "163", "netease", "wangyi", "wy");
+        registerMusicApi(new QqMusicApiMain(), "qq", "qqmusic", "tencent");
 
         PlayMusic.start();
         PlayRuntime.start();

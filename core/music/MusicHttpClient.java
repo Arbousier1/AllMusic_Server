@@ -18,7 +18,9 @@ import org.apache.hc.core5.util.Timeout;
 
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MusicHttpClient {
     public static final String UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0";
@@ -44,12 +46,17 @@ public class MusicHttpClient {
 
     public static CookieStore createCookieStore() {
         BasicCookieStore cookieStore = new BasicCookieStore();
+        if (AllMusic.cookie == null) {
+            return cookieStore;
+        }
         for (CookieObj cookie : AllMusic.cookie) {
+            if (cookie == null || cookie.name == null || cookie.value == null || cookie.domain == null) {
+                continue;
+            }
             BasicClientCookie cookie1 = new BasicClientCookie(cookie.name, cookie.value);
             cookie1.setExpiryDate(Instant.MAX);
             cookie1.setDomain(cookie.domain);
-            cookie1.setPath(cookie.path);
-            cookie1.setHttpOnly(cookie.hostOnly);
+            cookie1.setPath(cookie.path == null || cookie.path.isEmpty() ? "/" : cookie.path);
             cookie1.setHttpOnly(cookie.httpOnly);
             cookieStore.addCookie(cookie1);
         }
@@ -58,15 +65,81 @@ public class MusicHttpClient {
 
     public static void saveCookies(CookieStore cookieStore) {
         List<Cookie> cookies = cookieStore.getCookies();
+        List<CookieObj> list = new ArrayList<>();
         for (Cookie cookie : cookies) {
             CookieObj obj = new CookieObj();
             obj.domain = cookie.getDomain();
-            obj.hostOnly = cookie.isHttpOnly();
+            obj.hostOnly = false;
             obj.httpOnly = cookie.isHttpOnly();
             obj.name = cookie.getName();
+            obj.path = cookie.getPath();
             obj.value = cookie.getValue();
+            list.add(obj);
         }
+        AllMusic.cookie = list;
         AllMusic.saveCookie();
+    }
+
+    public static String buildCookieHeader(String host) {
+        if (host == null || host.isEmpty() || AllMusic.cookie == null) {
+            return null;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        String host1 = host.toLowerCase(Locale.ROOT);
+        for (CookieObj item : AllMusic.cookie) {
+            if (item == null || item.name == null || item.value == null || item.domain == null) {
+                continue;
+            }
+            if (!matchDomain(host1, item.domain)) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append("; ");
+            }
+            builder.append(item.name).append("=").append(item.value);
+        }
+
+        return builder.length() == 0 ? null : builder.toString();
+    }
+
+    public static String getCookieValue(String host, String... names) {
+        if (AllMusic.cookie == null || names == null) {
+            return null;
+        }
+
+        String host1 = host == null ? null : host.toLowerCase(Locale.ROOT);
+        for (String name : names) {
+            if (name == null) {
+                continue;
+            }
+            for (CookieObj item : AllMusic.cookie) {
+                if (item == null || item.name == null || item.value == null) {
+                    continue;
+                }
+                if (!item.name.equalsIgnoreCase(name)) {
+                    continue;
+                }
+                if (host1 != null && item.domain != null && !matchDomain(host1, item.domain)) {
+                    continue;
+                }
+                return item.value;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean matchDomain(String host, String domain) {
+        if (host == null || domain == null || domain.isEmpty()) {
+            return false;
+        }
+
+        String domain1 = domain.toLowerCase(Locale.ROOT);
+        while (domain1.startsWith(".")) {
+            domain1 = domain1.substring(1);
+        }
+        return host.equals(domain1) || host.endsWith("." + domain1);
     }
 
     public static InputStream get(String path) {

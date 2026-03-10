@@ -11,9 +11,12 @@ import com.coloryr.allmusic.server.core.sql.DataSql;
 import com.coloryr.allmusic.server.core.utils.HudUtils;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PlayMusic {
+    private static final Object PLAY_LIST_LOCK = new Object();
+    private static final Object DEEP_LOCK = new Object();
 
     /**
      * 播放列表
@@ -24,61 +27,61 @@ public class PlayMusic {
     /**
      * 切歌投票的玩家
      */
-    private static final Set<String> votePlayer = new HashSet<>();
+    private static final Set<String> votePlayer = ConcurrentHashMap.newKeySet();
     /**
      * 插歌投票的玩家
      */
-    private static final Set<String> pushPlayer = new HashSet<>();
+    private static final Set<String> pushPlayer = ConcurrentHashMap.newKeySet();
     /**
      * 总歌曲长度
      */
-    public static long musicAllTime = 0;
+    public static volatile long musicAllTime = 0;
     /**
      * 剩余歌曲长度
      */
-    public static long musicLessTime = 0;
+    public static volatile long musicLessTime = 0;
     /**
      * 歌曲现在位置
      */
-    public static long musicNowTime = 0;
+    public static volatile long musicNowTime = 0;
     /**
      * 当前歌曲信息
      */
-    public static SongInfoObj nowPlayMusic;
+    public static volatile SongInfoObj nowPlayMusic;
     /**
      * 当前歌词信息
      */
-    public static LyricSave lyric;
+    public static volatile LyricSave lyric;
     /**
      * 播放链接
      */
-    public static String url;
+    public static volatile String url;
     /**
      * 错误次数
      */
-    public static int error;
+    public static volatile int error;
     /**
      * 切歌投票时间
      */
-    private static int voteTime = 0;
+    private static volatile int voteTime = 0;
     /**
      * 切歌发起人
      */
-    private static String voteSender;
+    private static volatile String voteSender;
     /**
      * 插歌投票时间
      */
-    private static int pushTime = 0;
+    private static volatile int pushTime = 0;
     /**
      * 插歌发起人
      */
-    private static String pushSender;
+    private static volatile String pushSender;
     /**
      * 插歌目标
      */
-    private static SongInfoObj push;
-    private static boolean isRun;
-    private static int idleNow;
+    private static volatile SongInfoObj push;
+    private static volatile boolean isRun;
+    private static volatile int idleNow;
 
     /**
      * 停止歌曲逻辑
@@ -268,7 +271,9 @@ public class PlayMusic {
                 }
                 return;
             }
-            playList.add(info);
+            synchronized (PLAY_LIST_LOCK) {
+                playList.add(info);
+            }
             if (!AllMusic.getConfig().muteAddMessage) {
                 if (AllMusic.getConfig().showInBar) {
                     String data = AllMusic.getMessage().musicPlay.addMusic
@@ -310,7 +315,7 @@ public class PlayMusic {
      */
     public static void pushMusic() {
         SongInfoObj obj = push;
-        synchronized (playList) {
+        synchronized (PLAY_LIST_LOCK) {
             playList.remove(obj);
             playList.add(0, obj);
         }
@@ -322,7 +327,7 @@ public class PlayMusic {
      * @return 长度
      */
     public static int getListSize() {
-        synchronized (playList) {
+        synchronized (PLAY_LIST_LOCK) {
             return playList.size();
         }
     }
@@ -333,7 +338,7 @@ public class PlayMusic {
      * @return 播放列表
      */
     public static List<SongInfoObj> getList() {
-        synchronized (playList) {
+        synchronized (PLAY_LIST_LOCK) {
             return new ArrayList<>(playList);
         }
     }
@@ -342,7 +347,7 @@ public class PlayMusic {
      * 清理播放列表
      */
     public static void clear() {
-        synchronized (playList) {
+        synchronized (PLAY_LIST_LOCK) {
             playList.clear();
         }
     }
@@ -354,7 +359,7 @@ public class PlayMusic {
      * @return 结果
      */
     public static SongInfoObj remove(int index) {
-        synchronized (playList) {
+        synchronized (PLAY_LIST_LOCK) {
             return playList.remove(index);
         }
     }
@@ -365,7 +370,7 @@ public class PlayMusic {
      * @param index
      */
     public static void remove(SongInfoObj index) {
-        synchronized (playList) {
+        synchronized (PLAY_LIST_LOCK) {
             playList.remove(index);
         }
     }
@@ -376,12 +381,13 @@ public class PlayMusic {
      * @return 信息
      */
     public static String getAllList() {
+        List<SongInfoObj> list1 = getList();
         StringBuilder list = new StringBuilder();
         String a;
 
         SongInfoObj info;
-        for (int i = 0; i < playList.size(); i++) {
-            info = playList.get(i);
+        for (int i = 0; i < list1.size(); i++) {
+            info = list1.get(i);
             a = AllMusic.getMessage().musicPlay.listMusic.item;
             a = a.replace(ARG.index, String.valueOf(i + 1))
                     .replace(ARG.musicName, info.getName())
@@ -418,9 +424,11 @@ public class PlayMusic {
         if (nowPlayMusic != null && nowPlayMusic.getID().equalsIgnoreCase(id)
                 && Objects.equals(nowPlayMusic.getApi(), api))
             return true;
-        for (SongInfoObj item : playList) {
-            if (item.getID().equalsIgnoreCase(id) && Objects.equals(item.getApi(), api)) {
-                return true;
+        synchronized (PLAY_LIST_LOCK) {
+            for (SongInfoObj item : playList) {
+                if (item.getID().equalsIgnoreCase(id) && Objects.equals(item.getApi(), api)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -448,7 +456,9 @@ public class PlayMusic {
     }
 
     public static void clearIdleList() {
-        deep.clear();
+        synchronized (DEEP_LOCK) {
+            deep.clear();
+        }
         DataSql.clearIdleList();
     }
 
@@ -463,12 +473,14 @@ public class PlayMusic {
      * @return 是否已经放过了
      */
     private static boolean checkDeep(MusicObj music) {
-        for (MusicObj obj : deep) {
-            if (Objects.equals(obj.id, music.id) && obj.api == music.api) {
-                return true;
+        synchronized (DEEP_LOCK) {
+            for (MusicObj obj : deep) {
+                if (Objects.equals(obj.id, music.id) && Objects.equals(obj.api, music.api)) {
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
     }
 
     /**
@@ -489,14 +501,16 @@ public class PlayMusic {
                 if (size > len / 2) {
                     size = len / 2;
                 }
-                while (deep.size() >= size) {
-                    deep.poll();
+                synchronized (DEEP_LOCK) {
+                    while (deep.size() >= size) {
+                        deep.poll();
+                    }
+                    do {
+                        music = DataSql.readListItem();
+                    }
+                    while (checkDeep(music));
+                    deep.add(music);
                 }
-                do {
-                    music = DataSql.readListItem();
-                }
-                while (checkDeep(music));
-                deep.add(music);
             } else {
                 music = DataSql.readListItem();
             }
@@ -512,8 +526,7 @@ public class PlayMusic {
 
     public static SongInfoObj findPlayerMusic(String name) {
         List<SongInfoObj> list1 = getList();
-        for (int a = 0; a < playList.size(); a++) {
-            SongInfoObj item = list1.get(a);
+        for (SongInfoObj item : list1) {
             if (name.equalsIgnoreCase(item.getCall())) {
                 return item;
             }

@@ -16,10 +16,13 @@ out
 # gradle
 build
 .gradle
+.gradle-home
 
 # other
 eclipse
 run
+*.class
+.vscode/settings.json
 
 # Files from Forge MDK
 forge*changelog.txt

@@ -160,7 +160,6 @@ public class ConfigObj {
             saveConfig = true;
             cost = CostObj.make();
         }
-
         return saveConfig;
     }
 
