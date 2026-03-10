@@ -368,14 +368,38 @@ public final class QqApiQrLogin {
             throw new IllegalStateException("QQ QR image is empty");
         }
 
-        int padding = 2;
+        int sourceWidth = maxX - minX + 1;
+        int sourceHeight = maxY - minY + 1;
+        int targetSize = Math.min(Math.max(sourceWidth, sourceHeight), 48);
+        double scale = Math.max(sourceWidth, sourceHeight) / (double) targetSize;
+        int compactWidth = Math.max(1, (int) Math.round(sourceWidth / scale));
+        int compactHeight = Math.max(1, (int) Math.round(sourceHeight / scale));
+        int padding = 1;
+
+        boolean[][] pixels = new boolean[compactHeight + padding * 2][compactWidth + padding * 2];
+        for (int y = 0; y < compactHeight; y++) {
+            int sourceY = minY + Math.min(sourceHeight - 1, (int) Math.floor((y + 0.5D) * scale));
+            for (int x = 0; x < compactWidth; x++) {
+                int sourceX = minX + Math.min(sourceWidth - 1, (int) Math.floor((x + 0.5D) * scale));
+                pixels[y + padding][x + padding] = isDark(image.getRGB(sourceX, sourceY));
+            }
+        }
+
         AllMusic.log.data(Component.text(""));
-        for (int y = minY - padding; y <= maxY + padding; y++) {
+        for (int y = 0; y < pixels.length; y += 2) {
             StringBuilder line = new StringBuilder();
-            for (int x = minX - padding; x <= maxX + padding; x++) {
-                boolean dark = x >= 0 && y >= 0 && x < image.getWidth() && y < image.getHeight()
-                        && isDark(image.getRGB(x, y));
-                line.append(dark ? "\u2588\u2588" : "  ");
+            for (int x = 0; x < pixels[0].length; x++) {
+                boolean top = pixels[y][x];
+                boolean bottom = y + 1 < pixels.length && pixels[y + 1][x];
+                if (top && bottom) {
+                    line.append('\u2588');
+                } else if (top) {
+                    line.append('\u2580');
+                } else if (bottom) {
+                    line.append('\u2584');
+                } else {
+                    line.append(' ');
+                }
             }
             AllMusic.log.data(Component.text(line.toString()));
         }
