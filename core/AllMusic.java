@@ -13,6 +13,9 @@ import com.coloryr.allmusic.server.core.side.BaseSide;
 import com.coloryr.allmusic.server.core.side.IAllMusicLogger;
 import com.coloryr.allmusic.server.core.sql.DataSql;
 import com.coloryr.allmusic.server.core.sql.IEconomy;
+import com.coloryr.allmusic.server.netapi.meting.baidu.BaiduMusicApiMain;
+import com.coloryr.allmusic.server.netapi.meting.kugou.KugouMusicApiMain;
+import com.coloryr.allmusic.server.netapi.meting.kuwo.KuwoMusicApiMain;
 import com.coloryr.allmusic.server.netapi.NetiApiMain;
 import com.coloryr.allmusic.server.netapi.qq.QqMusicApiMain;
 import com.google.gson.Gson;
@@ -37,6 +40,7 @@ public class AllMusic {
     public static final Random random = new Random();
 
     public static final Map<String, IMusicApi> MUSIC_APIS = new ConcurrentHashMap<>();
+    private static final Map<String, IMusicApi> PRIMARY_MUSIC_APIS = Collections.synchronizedMap(new LinkedHashMap<String, IMusicApi>());
 
     private static String normalizeApiKey(String api) {
         if (api == null) {
@@ -53,6 +57,7 @@ public class AllMusic {
         String id = normalizeApiKey(api.getId());
         if (id != null && !id.isEmpty()) {
             MUSIC_APIS.put(id, api);
+            PRIMARY_MUSIC_APIS.put(id, api);
         }
 
         for (String alias : aliases) {
@@ -73,6 +78,14 @@ public class AllMusic {
 
     public static String getMusicApiList() {
         return String.join(", ", new TreeSet<>(MUSIC_APIS.keySet()));
+    }
+
+    public static Collection<IMusicApi> getRegisteredMusicApis() {
+        return Collections.unmodifiableCollection(new ArrayList<IMusicApi>(PRIMARY_MUSIC_APIS.values()));
+    }
+
+    public static boolean hasMusicApi() {
+        return !PRIMARY_MUSIC_APIS.isEmpty();
     }
 
     public static String getUnknownApiMessage() {
@@ -382,10 +395,15 @@ public class AllMusic {
      */
     public static void start() {
         MusicHttpClient.init();
+        MUSIC_APIS.clear();
+        PRIMARY_MUSIC_APIS.clear();
 
         IMusicApi api = new NetiApiMain();
         registerMusicApi(api, "163", "netease", "wangyi", "wy");
         registerMusicApi(new QqMusicApiMain(), "qq", "qqmusic", "tencent");
+        registerMusicApi(new KugouMusicApiMain(), "kugou", "kg");
+        registerMusicApi(new KuwoMusicApiMain(), "kuwo", "kw");
+        registerMusicApi(new BaiduMusicApiMain(), "baidu", "taihe", "qianqian");
 
         PlayMusic.start();
         PlayRuntime.start();

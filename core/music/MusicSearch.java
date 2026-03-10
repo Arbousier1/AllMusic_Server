@@ -64,33 +64,43 @@ public class MusicSearch {
     }
 
     private static SearchPageObj searchAll(PlayerAddMusicObj obj) {
-        List<SearchMusicObj> netease = searchByApi("netapi", obj);
-        List<SearchMusicObj> qq = searchByApi("qq", obj);
+        List<List<SearchMusicObj>> groups = new ArrayList<List<SearchMusicObj>>();
         List<SearchMusicObj> res = new ArrayList<>();
-
-        int max = Math.max(netease.size(), qq.size());
-        for (int i = 0; i < max; i++) {
-            if (i < netease.size()) {
-                res.add(netease.get(i));
+        int max = 0;
+        for (IMusicApi api : AllMusic.getRegisteredMusicApis()) {
+            List<SearchMusicObj> items = searchByApi(api, obj);
+            if (items.isEmpty()) {
+                continue;
             }
-            if (i < qq.size()) {
-                res.add(qq.get(i));
-            }
+            groups.add(items);
+            max = Math.max(max, items.size());
         }
-
-        if (res.isEmpty()) {
+        if (groups.isEmpty()) {
             return null;
+        }
+        for (int i = 0; i < max; i++) {
+            for (List<SearchMusicObj> items : groups) {
+                if (i < items.size()) {
+                    res.add(items.get(i));
+                }
+            }
         }
         return new SearchPageObj(res, Math.max(1, (res.size() + 9) / 10), "all");
     }
 
-    private static List<SearchMusicObj> searchByApi(String apiName, PlayerAddMusicObj obj) {
-        IMusicApi api = AllMusic.getMusicApi(apiName);
+    private static List<SearchMusicObj> searchByApi(IMusicApi api, PlayerAddMusicObj obj) {
         if (api == null) {
             return new ArrayList<>();
         }
 
-        SearchPageObj page = api.search(obj.args, obj.isDefault);
+        SearchPageObj page;
+        try {
+            page = api.search(obj.args, obj.isDefault);
+        } catch (Exception e) {
+            AllMusic.log.data("<light_purple>[AllMusic3]<red>Search failed on api " + api.getId());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
         if (page == null) {
             return new ArrayList<>();
         }
@@ -145,6 +155,13 @@ public class MusicSearch {
             api = "wy";
         } else if ("tencent".equalsIgnoreCase(api) || "qqmusic".equalsIgnoreCase(api)) {
             api = "qq";
+        } else if ("kugou".equalsIgnoreCase(api)) {
+            api = "kg";
+        } else if ("kuwo".equalsIgnoreCase(api)) {
+            api = "kw";
+        } else if ("baidu".equalsIgnoreCase(api) || "taihe".equalsIgnoreCase(api)
+                || "qianqian".equalsIgnoreCase(api)) {
+            api = "bd";
         }
         return item.name + " [" + api + "]";
     }

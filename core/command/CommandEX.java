@@ -55,14 +55,20 @@ public class CommandEX {
         commandAdminList.put("clearban", new CommandClearBanList());
         commandAdminList.put("clearbanplayer", new CommandClearBanPlayerList());
         commandAdminList.put("test", new CommandTest());
-        commandAdminList.put("loginqr", new CommandQrLogin());
-        commandAdminList.put("qrcode", new CommandQrLogin());
-        commandAdminList.put("qrlogin", new CommandQrLogin());
-        commandAdminList.put("qqloginqr", new CommandQqQrLogin());
-        commandAdminList.put("qqqrcode", new CommandQqQrLogin());
-        commandAdminList.put("qqqrlogin", new CommandQqQrLogin());
-        commandAdminList.put("qqcookie", new CommandQqCookie());
-        commandAdminList.put("tencentcookie", new CommandQqCookie());
+        commandAdminList.put("cookie", new CommandCookie());
+        commandAdminList.put("setcookie", new CommandCookie());
+        commandAdminList.put("qqcookie", new CommandCookie());
+        commandAdminList.put("tencentcookie", new CommandCookie());
+        commandAdminList.put("wycookie", new CommandCookie());
+        commandAdminList.put("163cookie", new CommandCookie());
+        commandAdminList.put("neteasecookie", new CommandCookie());
+        commandAdminList.put("kugoucookie", new CommandCookie());
+        commandAdminList.put("kgcookie", new CommandCookie());
+        commandAdminList.put("kuwocookie", new CommandCookie());
+        commandAdminList.put("kwcookie", new CommandCookie());
+        commandAdminList.put("baiducookie", new CommandCookie());
+        commandAdminList.put("taihecookie", new CommandCookie());
+        commandAdminList.put("qianqiancookie", new CommandCookie());
 
         normal.addAll(commandList.keySet());
         admin.addAll(commandAdminList.keySet());
@@ -81,9 +87,7 @@ public class CommandEX {
      * @param isDefault 是否是默认点歌方式
      */
     public static void searchMusic(Object sender, String name, String[] args, boolean isDefault) {
-        IMusicApi api = AllMusic.getMusicApi(AllMusic.getConfig().defaultApi);
-        IMusicApi qq = AllMusic.getMusicApi("qq");
-        if (api == null && qq == null) {
+        if (!AllMusic.hasMusicApi()) {
             AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
             return;
         }
