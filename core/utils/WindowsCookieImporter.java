@@ -138,7 +138,12 @@ public final class WindowsCookieImporter {
                 temp = copyTemp(db);
                 connection = DriverManager.getConnection("jdbc:sqlite:" + temp.getAbsolutePath());
             } catch (Exception copyError) {
-                connection = DriverManager.getConnection(buildReadOnlyUrl(db));
+                try {
+                    connection = DriverManager.getConnection(buildReadOnlyUrl(db));
+                } catch (Exception openError) {
+                    openError.addSuppressed(copyError);
+                    throw openError;
+                }
             }
             StringBuilder sql = new StringBuilder("SELECT host_key,path,name,encrypted_value,value,is_httponly FROM cookies WHERE ");
             for (int i = 0; i < target.domains.length; i++) {
@@ -218,7 +223,8 @@ public final class WindowsCookieImporter {
     }
 
     private static String buildReadOnlyUrl(File file) {
-        return "jdbc:sqlite:" + file.toURI().toString() + "?mode=ro&immutable=1";
+        String path = file.getAbsolutePath().replace('\\', '/');
+        return "jdbc:sqlite:" + path + "?mode=ro&immutable=1&nolock=1";
     }
 
     private static byte[] readMasterKey(File localState) throws Exception {
