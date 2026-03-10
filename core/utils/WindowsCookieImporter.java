@@ -12,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystemException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -173,8 +174,32 @@ public final class WindowsCookieImporter {
     private static File copyTemp(File source) throws Exception {
         File temp = File.createTempFile("am_cookie_", ".db");
         temp.deleteOnExit();
-        java.nio.file.Files.copy(source.toPath(), temp.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        try {
+            java.nio.file.Files.copy(source.toPath(), temp.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } catch (FileSystemException e) {
+            // Chromium may keep the cookie db locked while the browser is running.
+            copyLockedFile(source, temp);
+        }
         return temp;
+    }
+
+    private static void copyLockedFile(File source, File temp) throws Exception {
+        if (temp.exists() && !temp.delete()) {
+            throw new IOException("Failed to prepare temp cookie db: " + temp.getAbsolutePath());
+        }
+
+        ProcessBuilder builder = new ProcessBuilder("esentutl.exe",
+                "/y", source.getAbsolutePath(),
+                "/d", temp.getAbsolutePath(),
+                "/o");
+        builder.redirectErrorStream(true);
+        Process process = builder.start();
+        String output = readText(process.getInputStream()).trim();
+        int code = process.waitFor();
+        if (code != 0 || !temp.exists() || temp.length() == 0) {
+            throw new IOException("Locked cookie db copy failed: " + output);
+        }
+        temp.deleteOnExit();
     }
 
     private static byte[] readMasterKey(File localState) throws Exception {
