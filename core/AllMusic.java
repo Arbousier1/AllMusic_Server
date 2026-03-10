@@ -13,6 +13,7 @@ import com.coloryr.allmusic.server.core.side.BaseSide;
 import com.coloryr.allmusic.server.core.side.IAllMusicLogger;
 import com.coloryr.allmusic.server.core.sql.DataSql;
 import com.coloryr.allmusic.server.core.sql.IEconomy;
+import com.coloryr.allmusic.server.core.utils.LocalCookieBridge;
 import com.coloryr.allmusic.server.netapi.meting.baidu.BaiduMusicApiMain;
 import com.coloryr.allmusic.server.netapi.meting.kugou.KugouMusicApiMain;
 import com.coloryr.allmusic.server.netapi.meting.kuwo.KuwoMusicApiMain;
@@ -420,6 +421,7 @@ public class AllMusic {
         PlayMusic.clearVote();
         PlayMusic.clearPush();
         side.sendStop();
+        LocalCookieBridge.stop();
         MusicSearch.stop();
         PlayMusic.stop();
         PlayRuntime.stop();

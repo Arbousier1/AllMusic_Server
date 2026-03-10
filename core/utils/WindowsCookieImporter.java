@@ -30,24 +30,7 @@ public final class WindowsCookieImporter {
     }
 
     public static String normalizeApi(String api) {
-        String value = api == null ? "" : api.trim().toLowerCase(Locale.ROOT);
-        if (value.startsWith("qq") || value.startsWith("tencent")) {
-            return "qq";
-        }
-        if (value.startsWith("wy") || value.startsWith("163") || value.startsWith("netease")) {
-            return "netease";
-        }
-        if (value.startsWith("kg") || value.startsWith("kugou")) {
-            return "kugou";
-        }
-        if (value.startsWith("kw") || value.startsWith("kuwo")) {
-            return "kuwo";
-        }
-        if (value.startsWith("bd") || value.startsWith("baidu") || value.startsWith("taihe")
-                || value.startsWith("qianqian")) {
-            return "baidu";
-        }
-        return value;
+        return CookieImportApi.normalizeApi(api);
     }
 
     public static List<CookieObj> importToFile(String api, File cookieFile) throws Exception {
@@ -56,7 +39,7 @@ public final class WindowsCookieImporter {
             throw new IOException("Windows only");
         }
 
-        BrowserTarget target = resolveTarget(normalized);
+        CookieImportApi.Target target = CookieImportApi.resolve(normalized);
         if (target == null) {
             throw new IOException("Unsupported api: " + api);
         }
@@ -147,16 +130,17 @@ public final class WindowsCookieImporter {
                     throw openError;
                 }
             }
+            String[] patterns = target.getSqlPatterns();
             StringBuilder sql = new StringBuilder("SELECT host_key,path,name,encrypted_value,value,is_httponly FROM cookies WHERE ");
-            for (int i = 0; i < target.domains.length; i++) {
+            for (int i = 0; i < patterns.length; i++) {
                 if (i > 0) {
                     sql.append(" OR ");
                 }
                 sql.append("host_key LIKE ?");
             }
             statement = connection.prepareStatement(sql.toString());
-            for (int i = 0; i < target.domains.length; i++) {
-                statement.setString(i + 1, target.domains[i]);
+            for (int i = 0; i < patterns.length; i++) {
+                statement.setString(i + 1, patterns[i]);
             }
             set = statement.executeQuery();
             while (set.next()) {
@@ -340,25 +324,6 @@ public final class WindowsCookieImporter {
         return list;
     }
 
-    private static BrowserTarget resolveTarget(String api) {
-        if ("qq".equals(api)) {
-            return new BrowserTarget("%.qq.com", "%.y.qq.com", "y.qq.com", "c.y.qq.com", "u.y.qq.com");
-        }
-        if ("netease".equals(api)) {
-            return new BrowserTarget("%.163.com", "%.music.163.com", "music.163.com", "interface3.music.163.com");
-        }
-        if ("kugou".equals(api)) {
-            return new BrowserTarget("%.kugou.com", "www.kugou.com", "m.kugou.com", "mobilecdn.kugou.com", "wwwapi.kugou.com");
-        }
-        if ("kuwo".equals(api)) {
-            return new BrowserTarget("%.kuwo.cn", "www.kuwo.cn", "m.kuwo.cn");
-        }
-        if ("baidu".equals(api)) {
-            return new BrowserTarget("%.taihe.com", "%.qianqian.com", "musicapi.taihe.com");
-        }
-        return null;
-    }
-
     private static void mergeCookies(List<CookieObj> base, List<CookieObj> imported) {
         for (CookieObj item : imported) {
             upsert(base, item);
@@ -402,11 +367,4 @@ public final class WindowsCookieImporter {
         }
     }
 
-    private static final class BrowserTarget {
-        private final String[] domains;
-
-        private BrowserTarget(String... domains) {
-            this.domains = domains;
-        }
-    }
 }

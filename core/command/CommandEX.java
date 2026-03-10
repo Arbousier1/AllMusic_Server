@@ -56,6 +56,7 @@ public class CommandEX {
         commandAdminList.put("clearbanplayer", new CommandClearBanPlayerList());
         commandAdminList.put("test", new CommandTest());
         commandAdminList.put("importcookie", new CommandImportCookie());
+        commandAdminList.put("importcookiedb", new CommandImportCookieDb());
         commandAdminList.put("cookie", new CommandCookie());
         commandAdminList.put("setcookie", new CommandCookie());
         commandAdminList.put("qqcookie", new CommandCookie());
