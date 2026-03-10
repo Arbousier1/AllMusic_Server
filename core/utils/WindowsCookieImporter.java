@@ -5,6 +5,8 @@ import com.coloryr.allmusic.server.core.objs.CookieObj;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import org.sqlite.SQLiteConfig;
+import org.sqlite.SQLiteOpenMode;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -139,7 +141,7 @@ public final class WindowsCookieImporter {
                 connection = DriverManager.getConnection("jdbc:sqlite:" + temp.getAbsolutePath());
             } catch (Exception copyError) {
                 try {
-                    connection = DriverManager.getConnection(buildReadOnlyUrl(db));
+                    connection = openReadOnlyConnection(db);
                 } catch (Exception openError) {
                     openError.addSuppressed(copyError);
                     throw openError;
@@ -222,9 +224,11 @@ public final class WindowsCookieImporter {
         temp.deleteOnExit();
     }
 
-    private static String buildReadOnlyUrl(File file) {
-        String path = file.getAbsolutePath().replace('\\', '/');
-        return "jdbc:sqlite:" + path + "?mode=ro&immutable=1&nolock=1";
+    private static Connection openReadOnlyConnection(File file) throws Exception {
+        SQLiteConfig config = new SQLiteConfig();
+        config.setReadOnly(true);
+        config.setOpenMode(SQLiteOpenMode.READONLY);
+        return DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath(), config.toProperties());
     }
 
     private static byte[] readMasterKey(File localState) throws Exception {
