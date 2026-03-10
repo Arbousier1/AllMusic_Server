@@ -225,7 +225,8 @@ public final class WindowsCookieImporter {
 
     private static byte[] dpapiUnprotect(byte[] data) throws Exception {
         String input = Base64.getEncoder().encodeToString(data);
-        String command = "[Convert]::ToBase64String([System.Security.Cryptography.ProtectedData]::Unprotect([Convert]::FromBase64String('"
+        String command = "Add-Type -AssemblyName System.Security; "
+                + "[Convert]::ToBase64String([System.Security.Cryptography.ProtectedData]::Unprotect([Convert]::FromBase64String('"
                 + input + "'), $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser))";
         ProcessBuilder builder = new ProcessBuilder("powershell.exe", "-NoProfile", "-NonInteractive",
                 "-ExecutionPolicy", "Bypass", "-Command", command);
@@ -329,6 +330,7 @@ public final class WindowsCookieImporter {
         String value = System.getProperty("os.name");
         return value != null && value.toLowerCase(Locale.ROOT).contains("win");
     }
+
     private static final class BrowserProfile {
         private final File userDataDir;
         private final File localState;
