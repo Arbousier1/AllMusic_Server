@@ -4,10 +4,13 @@ import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.music.MusicHttpClient;
 import net.kyori.adventure.text.Component;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.cookie.Cookie;
 import org.apache.hc.client5.http.cookie.CookieStore;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.cookie.BasicClientCookie;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 
@@ -16,8 +19,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,7 +126,7 @@ public final class QqApiQrLogin {
                         return;
                     }
 
-                    requestText(context, status.redirectUrl);
+                    completeLogin(context, status.redirectUrl);
                     MusicHttpClient.saveCookies(cookieStore);
                     if (hasLoginCookie()) {
                         success(sender);
@@ -189,6 +194,7 @@ public final class QqApiQrLogin {
             request.setHeader("accept-language", "zh-CN,zh;q=0.9");
             request.setHeader("referer", "https://y.qq.com/");
             try (CloseableHttpResponse response = MusicHttpClient.client.execute(request, context)) {
+                captureCookies(context.getCookieStore(), url, response);
                 HttpEntity entity = response.getEntity();
                 if (entity == null) {
                     return null;
@@ -211,6 +217,7 @@ public final class QqApiQrLogin {
             request.setHeader("accept", "image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
             request.setHeader("referer", "https://y.qq.com/");
             try (CloseableHttpResponse response = MusicHttpClient.client.execute(request, context)) {
+                captureCookies(context.getCookieStore(), url, response);
                 HttpEntity entity = response.getEntity();
                 if (entity == null) {
                     return null;
@@ -230,6 +237,38 @@ public final class QqApiQrLogin {
             AllMusic.log.data("<light_purple>[AllMusic3]<red>QQ QR image request failed");
             e.printStackTrace();
             return null;
+        }
+    }
+
+    private static void completeLogin(HttpClientContext context, String url) {
+        String next = url;
+        for (int i = 0; i < 8 && !isBlank(next); i++) {
+            try {
+                HttpGet request = new HttpGet(next);
+                request.setConfig(RequestConfig.custom()
+                        .setRedirectsEnabled(false)
+                        .build());
+                request.setHeader("user-agent", USER_AGENT);
+                request.setHeader("accept", "*/*");
+                request.setHeader("accept-language", "zh-CN,zh;q=0.9");
+                request.setHeader("referer", "https://y.qq.com/");
+                try (CloseableHttpResponse response = MusicHttpClient.client.execute(request, context)) {
+                    captureCookies(context.getCookieStore(), next, response);
+                    Header location = response.getFirstHeader("Location");
+                    HttpEntity entity = response.getEntity();
+                    if (entity != null) {
+                        EntityUtils.consume(entity);
+                    }
+                    if (location == null || isBlank(location.getValue())) {
+                        return;
+                    }
+                    next = resolveUrl(next, location.getValue());
+                }
+            } catch (Exception e) {
+                AllMusic.log.data("<light_purple>[AllMusic3]<red>QQ login redirect processing failed");
+                e.printStackTrace();
+                return;
+            }
         }
     }
 
@@ -329,6 +368,68 @@ public final class QqApiQrLogin {
             }
         }
         return null;
+    }
+
+    private static void captureCookies(CookieStore cookieStore, String requestUrl, CloseableHttpResponse response) {
+        if (cookieStore == null || response == null || isBlank(requestUrl)) {
+            return;
+        }
+
+        String host;
+        try {
+            host = new URI(requestUrl).getHost();
+        } catch (Exception e) {
+            host = null;
+        }
+
+        for (Header header : response.getHeaders("Set-Cookie")) {
+            if (header == null || isBlank(header.getValue())) {
+                continue;
+            }
+            addCookie(cookieStore, host, header.getValue());
+        }
+    }
+
+    private static void addCookie(CookieStore cookieStore, String host, String setCookie) {
+        String[] parts = setCookie.split(";");
+        if (parts.length == 0) {
+            return;
+        }
+
+        String[] nameValue = parts[0].split("=", 2);
+        if (nameValue.length != 2 || isBlank(nameValue[0])) {
+            return;
+        }
+
+        BasicClientCookie cookie = new BasicClientCookie(nameValue[0].trim(), nameValue[1].trim());
+        cookie.setPath("/");
+        cookie.setDomain(host == null ? "" : host);
+        cookie.setExpiryDate(Instant.MAX);
+
+        for (int i = 1; i < parts.length; i++) {
+            String item = parts[i].trim();
+            int index = item.indexOf('=');
+            String key = index > 0 ? item.substring(0, index).trim() : item;
+            String value = index > 0 ? item.substring(index + 1).trim() : "";
+
+            if ("domain".equalsIgnoreCase(key) && !isBlank(value)) {
+                cookie.setDomain(value);
+            } else if ("path".equalsIgnoreCase(key) && !isBlank(value)) {
+                cookie.setPath(value);
+            } else if ("httponly".equalsIgnoreCase(key)) {
+                cookie.setHttpOnly(true);
+            }
+        }
+
+        cookieStore.addCookie(cookie);
+    }
+
+    private static String resolveUrl(String baseUrl, String location) {
+        try {
+            return new URI(baseUrl).resolve(location).toString();
+        } catch (Exception e) {
+            return location;
+        }
     }
 
     private static String buildToken(String qrsig) {
