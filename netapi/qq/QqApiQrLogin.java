@@ -23,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class QqApiQrLogin {
-    private static final String LOGIN_URL = "https://xui.ptlogin2.qq.com/cgi-bin/xlogin";
+    private static final String LOGIN_URL = "https://ui.ptlogin2.qq.com/cgi-bin/xlogin";
     private static final String QR_URL = "https://ssl.ptlogin2.qq.com/ptqrshow";
     private static final String CHECK_URL = "https://ssl.ptlogin2.qq.com/ptqrlogin";
     private static final String APP_ID = "716027609";
@@ -77,6 +77,9 @@ public final class QqApiQrLogin {
             if (isBlank(qrsig)) {
                 fail(sender, "Missing qrsig cookie, QQ QR login cannot continue");
                 return;
+            }
+            if (isBlank(getCookieValue(cookieStore, "pt_login_sig"))) {
+                AllMusic.log.data("<light_purple>[AllMusic3]<yellow>QQ QR login preheat completed without pt_login_sig cookie");
             }
 
             printQr(image);
