@@ -18,6 +18,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public final class QqApiHttpClient {
+    private static final String DEFAULT_COOKIE = "pgv_pvi=22038528; pgv_si=s3156287488; pgv_pvid=5535248600; yplayer_open=1; ts_last=y.qq.com/portal/player.html; ts_uid=4847550686; yq_index=0; qqmusic_fromtag=66; player_exist=1";
+    private static final String DEFAULT_USER_AGENT = "QQ%E9%9F%B3%E4%B9%90/54409 CFNetwork/901.1 Darwin/17.6.0 (x86_64)";
+
     private QqApiHttpClient() {
     }
 
@@ -25,16 +28,14 @@ public final class QqApiHttpClient {
         try {
             String fullUrl = buildUrl(url, query);
             HttpGet request = new HttpGet(fullUrl);
-            request.setHeader("accept", "application/json");
-            request.setHeader("accept-language", "zh-CN,zh;q=0.9");
-            request.setHeader("user-agent", MusicHttpClient.UserAgent);
+            request.setHeader("accept", "*/*");
+            request.setHeader("accept-language", "zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4");
+            request.setHeader("user-agent", DEFAULT_USER_AGENT);
             request.setHeader("origin", "https://y.qq.com");
-            request.setHeader("referer", referer == null ? "https://y.qq.com/" : referer);
+            request.setHeader("referer", referer == null ? "http://y.qq.com" : referer);
 
             String cookieHeader = MusicHttpClient.buildCookieHeader(new URI(fullUrl).getHost());
-            if (!isBlank(cookieHeader)) {
-                request.setHeader("cookie", cookieHeader);
-            }
+            request.setHeader("cookie", isBlank(cookieHeader) ? DEFAULT_COOKIE : cookieHeader);
 
             HttpClientContext context = HttpClientContext.create();
             CookieStore cookieStore = MusicHttpClient.createCookieStore();

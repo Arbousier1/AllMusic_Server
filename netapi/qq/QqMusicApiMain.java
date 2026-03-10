@@ -417,6 +417,9 @@ public class QqMusicApiMain implements IMusicApi {
         if (firstLong(file, 0, "size_320mp3") > 0) {
             files.add(new FileInfo("M800", ".mp3", "320"));
         }
+        if (firstLong(file, 0, "size_192aac") > 0) {
+            files.add(new FileInfo("C600", ".m4a", "192"));
+        }
         if (firstLong(file, 0, "size_128mp3") > 0) {
             files.add(new FileInfo("M500", ".mp3", "128"));
         }
@@ -425,6 +428,9 @@ public class QqMusicApiMain implements IMusicApi {
         }
         if (firstLong(file, 0, "size_48aac") > 0) {
             files.add(new FileInfo("C200", ".m4a", "48"));
+        }
+        if (firstLong(file, 0, "size_24aac") > 0) {
+            files.add(new FileInfo("C100", ".m4a", "24"));
         }
 
         String want = normalizeBr();
@@ -458,8 +464,20 @@ public class QqMusicApiMain implements IMusicApi {
         if ("320000".equals(br) || "320".equals(br)) {
             return "320";
         }
+        if ("192000".equals(br) || "192".equals(br)) {
+            return "192";
+        }
         if ("128000".equals(br) || "128".equals(br)) {
             return "128";
+        }
+        if ("96000".equals(br) || "96".equals(br)) {
+            return "96";
+        }
+        if ("48000".equals(br) || "48".equals(br)) {
+            return "48";
+        }
+        if ("24000".equals(br) || "24".equals(br)) {
+            return "24";
         }
         return "320";
     }

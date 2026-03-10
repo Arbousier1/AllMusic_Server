@@ -75,14 +75,16 @@ public class NetiApiMain implements IMusicApi {
         JsonObject params = new JsonObject();
         params.addProperty("c", "[{\"id\":" + id + "}]");
 
-        HttpResObj res = NetApiHttpClient.post("https://music.163.com/api/v3/song/detail", params, EncryptType.WEAPI, null);
+        HttpResObj res = NetApiHttpClient.post("https://music.163.com/api/v3/song/detail/", params,
+                EncryptType.EAPI, "/api/v3/song/detail/");
         if (res != null && res.ok) {
             InfoObj temp = AllMusic.gson.fromJson(res.data, InfoObj.class);
             if (temp.isOk()) {
                 params = new JsonObject();
                 params.addProperty("ids", "[" + id + "]");
-                params.addProperty("br", "320000");
-                res = NetApiHttpClient.post("https://music.163.com/weapi/song/enhance/player/url", params, EncryptType.WEAPI, null);
+                params.addProperty("br", resolveNeteaseBr());
+                res = NetApiHttpClient.post("https://music.163.com/api/song/enhance/player/url", params,
+                        EncryptType.EAPI, "/api/song/enhance/player/url");
                 if (res == null || !res.ok) {
                     AllMusic.log.data("<light_purple>[AllMusic3]<red>版权检索失败");
                     return null;
@@ -139,9 +141,9 @@ public class NetiApiMain implements IMusicApi {
     public String getPlayUrl(String id) {
         JsonObject params = new JsonObject();
         params.addProperty("ids", "[" + id + "]");
-        params.addProperty("level", "lossless");
-        params.addProperty("encodeType", "aac");
-        HttpResObj res = NetApiHttpClient.post("https://music.163.com/weapi/song/enhance/player/url/v1", params, EncryptType.WEAPI, null);
+        params.addProperty("br", resolveNeteaseBr());
+        HttpResObj res = NetApiHttpClient.post("https://music.163.com/api/song/enhance/player/url", params,
+                EncryptType.EAPI, "/api/song/enhance/player/url");
         if (res != null && res.ok) {
             try {
                 TrialInfoObj obj = AllMusic.gson.fromJson(res.data, TrialInfoObj.class);
@@ -164,9 +166,11 @@ public class NetiApiMain implements IMusicApi {
         final Thread thread = new Thread(() -> {
             JsonObject params = new JsonObject();
             params.addProperty("id", id);
-            params.addProperty("n", 100000);
-            params.addProperty("s", 8);
-            HttpResObj res = NetApiHttpClient.post("https://music.163.com/api/v6/playlist/detail", params, EncryptType.API, null);
+            params.addProperty("n", 1000);
+            params.addProperty("s", 0);
+            params.addProperty("t", 0);
+            HttpResObj res = NetApiHttpClient.post("https://music.163.com/api/v6/playlist/detail", params,
+                    EncryptType.EAPI, "/api/v6/playlist/detail");
             if (res != null && res.ok)
                 try {
                     isUpdate = true;
@@ -246,15 +250,20 @@ public class NetiApiMain implements IMusicApi {
             name1.append(name[a]).append(" ");
         }
         String MusicName = name1.toString();
+        if (MusicName.isEmpty()) {
+            return null;
+        }
         MusicName = MusicName.substring(0, MusicName.length() - 1);
 
         JsonObject params = new JsonObject();
         params.addProperty("s", MusicName);
         params.addProperty("type", 1);
         params.addProperty("limit", 30);
+        params.addProperty("total", true);
         params.addProperty("offset", 0);
 
-        HttpResObj res = NetApiHttpClient.post("https://music.163.com/weapi/search/get", params, EncryptType.WEAPI, null);
+        HttpResObj res = NetApiHttpClient.post("https://music.163.com/api/cloudsearch/pc", params,
+                EncryptType.EAPI, "/api/cloudsearch/pc");
         if (res != null && res.ok) {
             SearchDataObj obj = AllMusic.gson.fromJson(res.data, SearchDataObj.class);
             if (obj != null && obj.isOk()) {
@@ -273,5 +282,22 @@ public class NetiApiMain implements IMusicApi {
             }
         }
         return null;
+    }
+
+    private int resolveNeteaseBr() {
+        String value = AllMusic.getConfig().musicBR;
+        if (value == null || value.trim().isEmpty()) {
+            return 320000;
+        }
+
+        value = value.trim().toLowerCase();
+        if ("999000".equals(value) || "lossless".equals(value) || "flac".equals(value)) {
+            return 999000;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception ignored) {
+            return 320000;
+        }
     }
 }

@@ -23,12 +23,15 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 public class NetApiHttpClient {
+    private static final String NETEASE_APPVER = "8.7.01";
+    private static final String NETEASE_EAPI_USER_AGENT = "Mozilla/5.0 (Linux; Android 11; M2007J3SC Build/RKQ1.200826.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045714 Mobile Safari/537.36 NeteaseMusic/8.7.01";
 
     public static HttpResObj get(String path, String data) {
         try {
@@ -40,6 +43,7 @@ public class NetApiHttpClient {
             HttpClientContext context = HttpClientContext.create();
             CookieStore cookieStore = MusicHttpClient.createCookieStore();
             context.setCookieStore(cookieStore);
+            request.setHeader("cookie", buildNeteaseCookieHeader(cookieStore.getCookies()));
             try (CloseableHttpResponse response = MusicHttpClient.client.execute(request, context)) {
                 int httpCode = response.getCode();
                 HttpEntity entity = response.getEntity();
@@ -82,6 +86,10 @@ public class NetApiHttpClient {
             context.setCookieStore(cookieStore);
             EncResObj res;
             List<Cookie> cookies = cookieStore.getCookies();
+            request.setHeader("Accept", "*/*");
+            request.setHeader("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7");
+            request.setHeader("Connection", "keep-alive");
+            request.setHeader("Cookie", buildNeteaseCookieHeader(cookies));
             // 注意：这里需要根据域名过滤，但为了简化，我们使用所有 cookies
             if (type == EncryptType.WEAPI) {
                 request.setHeader("User-Agent", MusicHttpClient.UserAgent);
@@ -100,15 +108,19 @@ public class NetApiHttpClient {
                 params.add(new BasicNameValuePair("encSecKey", res.encSecKey));
                 request.setEntity(new UrlEncodedFormEntity(params));
             } else if (type == EncryptType.EAPI) {
-                request.setHeader("User-Agent", "Mozilla/5.0 (Linux; Android 9; PCT-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.64 HuaweiBrowser/10.0.3.311 Mobile Safari/537.36");
+                String deviceId = randomHex(16).toUpperCase();
+                String requestId = System.currentTimeMillis() + "_" + String.format("%04d", (int) (Math.random() * 1000));
+                request.setHeader("User-Agent", NETEASE_EAPI_USER_AGENT);
                 JsonObject header = new JsonObject();
-                header.addProperty("appver", "8.10.90");
+                header.addProperty("appver", NETEASE_APPVER);
                 header.addProperty("versioncode", "140");
-                header.addProperty("buildver", new Date().toString().substring(0, 10));
+                header.addProperty("buildver", new SimpleDateFormat("yyyyMMdd").format(new Date()));
                 header.addProperty("resolution", "1920x1080");
                 header.addProperty("os", "android");
-                String requestId = "0000" + (new Date() + "_" + Math.floor(Math.random() * 1000));
                 header.addProperty("requestId", requestId);
+                header.addProperty("deviceId", deviceId);
+                header.addProperty("channel", "netease");
+                header.addProperty("osver", "android");
                 for (Cookie cookie : cookies) {
                     if (cookie.getName().equalsIgnoreCase("MUSIC_U")) {
                         header.addProperty("MUSIC_U", cookie.getValue());
@@ -168,5 +180,41 @@ public class NetApiHttpClient {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static String buildNeteaseCookieHeader(List<Cookie> cookies) {
+        StringBuilder builder = new StringBuilder();
+        appendCookie(builder, "osver", "android");
+        appendCookie(builder, "appver", NETEASE_APPVER);
+        appendCookie(builder, "os", "android");
+        appendCookie(builder, "deviceId", randomHex(16).toUpperCase());
+        appendCookie(builder, "channel", "netease");
+        appendCookie(builder, "requestId", System.currentTimeMillis() + "_" + String.format("%04d", (int) (Math.random() * 1000)));
+        appendCookie(builder, "__remember_me", "true");
+        for (Cookie cookie : cookies) {
+            if (cookie == null || cookie.getName() == null || cookie.getValue() == null) {
+                continue;
+            }
+            appendCookie(builder, cookie.getName(), cookie.getValue());
+        }
+        return builder.toString();
+    }
+
+    private static void appendCookie(StringBuilder builder, String name, String value) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+        if (builder.length() > 0) {
+            builder.append("; ");
+        }
+        builder.append(name).append("=").append(value);
+    }
+
+    private static String randomHex(int length) {
+        StringBuilder builder = new StringBuilder(length);
+        while (builder.length() < length) {
+            builder.append(Integer.toHexString(AllMusic.random.nextInt(16)));
+        }
+        return builder.substring(0, length);
     }
 }

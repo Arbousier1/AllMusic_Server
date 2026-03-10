@@ -55,6 +55,12 @@ public class CommandEX {
         commandAdminList.put("clearban", new CommandClearBanList());
         commandAdminList.put("clearbanplayer", new CommandClearBanPlayerList());
         commandAdminList.put("test", new CommandTest());
+        commandAdminList.put("loginqr", new CommandQrLogin());
+        commandAdminList.put("qrcode", new CommandQrLogin());
+        commandAdminList.put("qrlogin", new CommandQrLogin());
+        commandAdminList.put("qqloginqr", new CommandQqQrLogin());
+        commandAdminList.put("qqqrcode", new CommandQqQrLogin());
+        commandAdminList.put("qqqrlogin", new CommandQqQrLogin());
 
         normal.addAll(commandList.keySet());
         admin.addAll(commandAdminList.keySet());
