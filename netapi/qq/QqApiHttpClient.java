@@ -84,7 +84,11 @@ public final class QqApiHttpClient {
     }
 
     private static String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+        try {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            throw new IllegalStateException("UTF-8 is not supported", e);
+        }
     }
 
     private static boolean isBlank(String value) {
