@@ -252,6 +252,9 @@ public final class WindowsCookieImporter {
         if (encrypted == null || encrypted.length == 0) {
             return null;
         }
+        if (startsWith(encrypted, "v20")) {
+            throw new IOException("Browser cookie uses application-bound encryption (v20), direct import is not supported");
+        }
         if (startsWith(encrypted, "v10") || startsWith(encrypted, "v11")) {
             byte[] nonce = new byte[12];
             System.arraycopy(encrypted, 3, nonce, 0, nonce.length);
@@ -261,7 +264,11 @@ public final class WindowsCookieImporter {
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(masterKey, "AES"), new GCMParameterSpec(128, nonce));
             return new String(cipher.doFinal(payload), StandardCharsets.UTF_8);
         }
-        return new String(dpapiUnprotect(encrypted), StandardCharsets.UTF_8);
+        try {
+            return new String(dpapiUnprotect(encrypted), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new IOException("Browser cookie decryption failed, likely blocked by application-bound encryption", e);
+        }
     }
 
     private static boolean startsWith(byte[] data, String prefix) {
