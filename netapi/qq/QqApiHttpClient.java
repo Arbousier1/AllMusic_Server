@@ -30,12 +30,13 @@ public final class QqApiHttpClient {
             HttpGet request = new HttpGet(fullUrl);
             request.setHeader("accept", "*/*");
             request.setHeader("accept-language", "zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4");
+            request.setHeader("connection", "keep-alive");
+            request.setHeader("content-type", "application/x-www-form-urlencoded");
             request.setHeader("user-agent", DEFAULT_USER_AGENT);
-            request.setHeader("origin", "https://y.qq.com");
             request.setHeader("referer", referer == null ? "http://y.qq.com" : referer);
 
             String cookieHeader = MusicHttpClient.buildCookieHeader(new URI(fullUrl).getHost());
-            request.setHeader("cookie", isBlank(cookieHeader) ? DEFAULT_COOKIE : cookieHeader);
+            request.setHeader("cookie", isBlank(cookieHeader) ? DEFAULT_COOKIE : DEFAULT_COOKIE + "; " + cookieHeader);
 
             HttpClientContext context = HttpClientContext.create();
             CookieStore cookieStore = MusicHttpClient.createCookieStore();

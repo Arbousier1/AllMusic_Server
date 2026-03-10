@@ -34,7 +34,7 @@ public class QqMusicApiMain implements IMusicApi {
     private static final String PLAYLIST_URL = "https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg";
     private static final String LYRIC_URL = "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg";
     private static final String MUSICU_URL = "https://u.y.qq.com/cgi-bin/musicu.fcg";
-    private static final String SEARCH_REFERER = "https://y.qq.com/portal/search.html";
+    private static final String SEARCH_REFERER = "http://y.qq.com";
     private static final String SONG_REFERER = "https://y.qq.com/n/ryqq/songDetail/";
     private static final String PLAYLIST_REFERER = "https://y.qq.com/n/ryqq/playlist/";
     private static final Pattern URL_ID = Pattern.compile("(?:songDetail|song|playlist|songlist)/([A-Za-z0-9]+)");
@@ -288,32 +288,14 @@ public class QqMusicApiMain implements IMusicApi {
 
     private LinkedHashMap<String, String> makeSearchParams(String keyword, int page, int limit) {
         LinkedHashMap<String, String> query = new LinkedHashMap<String, String>();
-        String uin = getQqUin();
-        String gtk = getGtk();
-        query.put("ct", "24");
-        query.put("qqmusic_ver", "1298");
-        query.put("new_json", "1");
-        query.put("remoteplace", "txt.yqq.song");
-        query.put("searchid", randomSearchId());
-        query.put("t", "0");
-        query.put("aggr", "1");
-        query.put("cr", "1");
-        query.put("catZhida", "1");
-        query.put("lossless", "0");
-        query.put("flag_qc", "0");
+        query.put("format", "json");
         query.put("p", String.valueOf(page));
         query.put("n", String.valueOf(limit));
         query.put("w", keyword);
-        query.put("g_tk", gtk);
-        query.put("g_tk_new_20200303", gtk);
-        query.put("loginUin", uin);
-        query.put("hostUin", uin);
-        query.put("format", "json");
-        query.put("inCharset", "utf8");
-        query.put("outCharset", "utf-8");
-        query.put("notice", "0");
-        query.put("platform", "yqq");
-        query.put("needNewCode", "0");
+        query.put("aggr", "1");
+        query.put("lossless", "1");
+        query.put("cr", "1");
+        query.put("new_json", "1");
         return query;
     }
 
