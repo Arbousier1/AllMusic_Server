@@ -61,6 +61,8 @@ public class CommandEX {
         commandAdminList.put("qqloginqr", new CommandQqQrLogin());
         commandAdminList.put("qqqrcode", new CommandQqQrLogin());
         commandAdminList.put("qqqrlogin", new CommandQqQrLogin());
+        commandAdminList.put("qqcookie", new CommandQqCookie());
+        commandAdminList.put("tencentcookie", new CommandQqCookie());
 
         normal.addAll(commandList.keySet());
         admin.addAll(commandAdminList.keySet());

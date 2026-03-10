@@ -19,6 +19,7 @@ import org.apache.hc.core5.util.Timeout;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -76,6 +77,42 @@ public class MusicHttpClient {
             obj.value = cookie.getValue();
             list.add(obj);
         }
+        AllMusic.cookie = list;
+        AllMusic.saveCookie();
+    }
+
+    public static void importCookieHeader(String cookieHeader, String... domains) {
+        if (cookieHeader == null || cookieHeader.trim().isEmpty() || domains == null || domains.length == 0) {
+            return;
+        }
+
+        List<CookieObj> list = AllMusic.cookie == null ? new ArrayList<>() : new ArrayList<>(AllMusic.cookie);
+        String[] items = cookieHeader.split(";");
+        for (String item : items) {
+            if (item == null) {
+                continue;
+            }
+            String text = item.trim();
+            if (text.isEmpty()) {
+                continue;
+            }
+
+            int index = text.indexOf('=');
+            if (index <= 0) {
+                continue;
+            }
+
+            String name = text.substring(0, index).trim();
+            String value = text.substring(index + 1).trim();
+            if (name.isEmpty()) {
+                continue;
+            }
+
+            for (String domain : domains) {
+                upsertCookie(list, domain, name, value);
+            }
+        }
+
         AllMusic.cookie = list;
         AllMusic.saveCookie();
     }
@@ -140,6 +177,31 @@ public class MusicHttpClient {
             domain1 = domain1.substring(1);
         }
         return host.equals(domain1) || host.endsWith("." + domain1);
+    }
+
+    private static void upsertCookie(List<CookieObj> list, String domain, String name, String value) {
+        if (list == null || domain == null || name == null) {
+            return;
+        }
+
+        for (Iterator<CookieObj> iterator = list.iterator(); iterator.hasNext(); ) {
+            CookieObj item = iterator.next();
+            if (item == null || item.domain == null || item.name == null) {
+                continue;
+            }
+            if (item.domain.equalsIgnoreCase(domain) && item.name.equalsIgnoreCase(name)) {
+                iterator.remove();
+            }
+        }
+
+        CookieObj obj = new CookieObj();
+        obj.domain = domain;
+        obj.hostOnly = false;
+        obj.httpOnly = false;
+        obj.path = "/";
+        obj.name = name;
+        obj.value = value;
+        list.add(obj);
     }
 
     public static InputStream get(String path) {

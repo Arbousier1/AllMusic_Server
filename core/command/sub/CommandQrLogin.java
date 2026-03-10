@@ -59,9 +59,11 @@ public class CommandQrLogin extends ACommand {
     }
 
     private void startQq(Object sender) {
+        AllMusic.side.sendMessage(sender,
+                "<light_purple>[AllMusic3]<yellow>Meting-style Tencent auth uses cookies. Prefer /music qqcookie <cookie>");
         if (QqApiQrLogin.start(sender)) {
             AllMusic.side.sendMessage(sender,
-                    "<light_purple>[AllMusic3]<yellow>QQ Music QR code has been printed to console, scan it with QQ or QQ Music");
+                    "<light_purple>[AllMusic3]<yellow>QQ QR login remains experimental and may not yield QQ Music cookies");
         } else {
             AllMusic.side.sendMessage(sender,
                     "<light_purple>[AllMusic3]<yellow>A QQ QR login task is already running");
