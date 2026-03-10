@@ -2,6 +2,7 @@ package com.coloryr.allmusic.server.core.command.sub;
 
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.command.ACommand;
+import com.coloryr.allmusic.server.core.objs.CookieObj;
 import com.coloryr.allmusic.server.core.utils.WindowsCookieImporter;
 
 import java.io.File;
@@ -29,21 +30,11 @@ public class CommandImportCookie extends ACommand {
                 try {
                     File folder = AllMusic.side.getFolder();
                     File cookieFile = new File(folder, "cookie.json");
-                    File jarFile = WindowsCookieImporter.resolveJarFile(CommandImportCookie.class);
-                    File scriptFile = null;
-                    if (jarFile != null && jarFile.isFile()) {
-                        scriptFile = WindowsCookieImporter.writeHelperScript(folder, cookieFile, jarFile);
-                    }
-                    List<com.coloryr.allmusic.server.core.objs.CookieObj> imported =
-                            WindowsCookieImporter.importToFile(api, cookieFile);
+                    List<CookieObj> imported = WindowsCookieImporter.importToFile(api, cookieFile);
                     AllMusic.cookie = WindowsCookieImporter.readCookieFile(cookieFile);
                     AllMusic.side.sendMessageTask(sender,
                             "<light_purple>[AllMusic3]<dark_green>Imported " + imported.size()
                                     + " browser cookies for " + api + " into cookie.json");
-                    if (scriptFile != null) {
-                        AllMusic.side.sendMessageTask(sender,
-                                "<light_purple>[AllMusic3]<yellow>Helper script: " + scriptFile.getAbsolutePath());
-                    }
                 } catch (Exception e) {
                     AllMusic.side.sendMessageTask(sender,
                             "<light_purple>[AllMusic3]<red>Browser cookie import failed: " + e.getMessage());

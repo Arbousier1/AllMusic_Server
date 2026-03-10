@@ -97,37 +97,6 @@ public final class WindowsCookieImporter {
         }
     }
 
-    public static File writeHelperScript(File folder, File cookieFile, File jarFile) throws Exception {
-        File script = new File(folder, "import_cookie.ps1");
-        String jar = escapePs(jarFile.getAbsolutePath());
-        String cookie = escapePs(cookieFile.getAbsolutePath());
-        String content = ""
-                + "param([Parameter(Mandatory=$true)][string]$Api)\r\n"
-                + "$java = if ($env:JAVA_HOME) { Join-Path $env:JAVA_HOME 'bin\\java.exe' } else { 'java' }\r\n"
-                + "$jar = '" + jar + "'\r\n"
-                + "$cookie = '" + cookie + "'\r\n"
-                + "& $java -cp $jar com.coloryr.allmusic.server.tools.WindowsCookieImportCli $Api $cookie\r\n"
-                + "exit $LASTEXITCODE\r\n";
-        Writer writer = null;
-        try {
-            writer = new OutputStreamWriter(new FileOutputStream(script), StandardCharsets.UTF_8);
-            writer.write(content);
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
-        }
-        return script;
-    }
-
-    public static File resolveJarFile(Class<?> type) {
-        try {
-            return new File(type.getProtectionDomain().getCodeSource().getLocation().toURI());
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     private static List<CookieObj> readChromiumCookies(BrowserTarget target) throws Exception {
         List<CookieObj> list = new ArrayList<CookieObj>();
         for (BrowserProfile browser : getBrowsers()) {
@@ -360,11 +329,6 @@ public final class WindowsCookieImporter {
         String value = System.getProperty("os.name");
         return value != null && value.toLowerCase(Locale.ROOT).contains("win");
     }
-
-    private static String escapePs(String value) {
-        return value.replace("'", "''");
-    }
-
     private static final class BrowserProfile {
         private final File userDataDir;
         private final File localState;
