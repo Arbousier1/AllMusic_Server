@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CommandImportCookie extends ACommand {
+    private static volatile boolean isRunning;
+
     @Override
     public void execute(final Object sender, String name, String[] args) {
         if (args.length < 2) {
@@ -22,7 +24,12 @@ public class CommandImportCookie extends ACommand {
             AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<red>Unsupported import api");
             return;
         }
+        if (isRunning) {
+            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<red>Browser cookie import is already running");
+            return;
+        }
 
+        isRunning = true;
         AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<yellow>Importing browser cookies for " + api);
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -39,6 +46,8 @@ public class CommandImportCookie extends ACommand {
                     AllMusic.side.sendMessageTask(sender,
                             "<light_purple>[AllMusic3]<red>Browser cookie import failed: " + e.getMessage());
                     e.printStackTrace();
+                } finally {
+                    isRunning = false;
                 }
             }
         }, "AllMusic_importCookie");

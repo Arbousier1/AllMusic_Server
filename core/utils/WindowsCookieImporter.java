@@ -100,6 +100,7 @@ public final class WindowsCookieImporter {
 
     private static List<CookieObj> readChromiumCookies(BrowserTarget target) throws Exception {
         List<CookieObj> list = new ArrayList<CookieObj>();
+        Exception lastError = null;
         for (BrowserProfile browser : getBrowsers()) {
             if (!browser.userDataDir.exists() || !browser.localState.exists()) {
                 continue;
@@ -113,20 +114,32 @@ public final class WindowsCookieImporter {
                 if (!db.exists()) {
                     continue;
                 }
-                readBrowserDb(list, db, masterKey, target);
+                try {
+                    readBrowserDb(list, db, masterKey, target);
+                } catch (Exception e) {
+                    lastError = e;
+                }
             }
+        }
+        if (list.isEmpty() && lastError != null) {
+            throw lastError;
         }
         return list;
     }
 
     private static void readBrowserDb(List<CookieObj> list, File db, byte[] masterKey, BrowserTarget target) throws Exception {
-        File temp = copyTemp(db);
+        File temp = null;
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet set = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:" + temp.getAbsolutePath());
+            try {
+                temp = copyTemp(db);
+                connection = DriverManager.getConnection("jdbc:sqlite:" + temp.getAbsolutePath());
+            } catch (Exception copyError) {
+                connection = DriverManager.getConnection(buildReadOnlyUrl(db));
+            }
             StringBuilder sql = new StringBuilder("SELECT host_key,path,name,encrypted_value,value,is_httponly FROM cookies WHERE ");
             for (int i = 0; i < target.domains.length; i++) {
                 if (i > 0) {
@@ -167,7 +180,9 @@ public final class WindowsCookieImporter {
             if (connection != null) {
                 connection.close();
             }
-            temp.delete();
+            if (temp != null) {
+                temp.delete();
+            }
         }
     }
 
@@ -200,6 +215,10 @@ public final class WindowsCookieImporter {
             throw new IOException("Locked cookie db copy failed: " + output);
         }
         temp.deleteOnExit();
+    }
+
+    private static String buildReadOnlyUrl(File file) {
+        return "jdbc:sqlite:" + file.toURI().toString() + "?mode=ro&immutable=1";
     }
 
     private static byte[] readMasterKey(File localState) throws Exception {
