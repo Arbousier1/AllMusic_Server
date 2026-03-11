@@ -17,8 +17,8 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.util.Timeout;
 
 import java.io.InputStream;
-import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +27,7 @@ public class MusicHttpClient {
     public static final String UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0";
     private static final int CONNECT_TIMEOUT = 5;
     private static final int READ_TIMEOUT = 7;
+    private static final long PERSISTENT_COOKIE_SENTINEL_MILLIS = 253402300799000L;
     public static CloseableHttpClient client;
 
     public static void init() {
@@ -57,9 +58,9 @@ public class MusicHttpClient {
             BasicClientCookie cookie1 = new BasicClientCookie(cookie.name, cookie.value);
             if (cookie.expirationDate != null) {
                 long millis = Math.round(cookie.expirationDate * 1000D);
-                cookie1.setExpiryDate(Instant.ofEpochMilli(millis));
+                cookie1.setExpiryDate(new Date(millis));
             } else if (!Boolean.TRUE.equals(cookie.session)) {
-                cookie1.setExpiryDate(Instant.MAX);
+                cookie1.setExpiryDate(new Date(PERSISTENT_COOKIE_SENTINEL_MILLIS));
             }
             cookie1.setDomain(cookie.domain);
             cookie1.setPath(cookie.path == null || cookie.path.isEmpty() ? "/" : cookie.path);
@@ -215,9 +216,9 @@ public class MusicHttpClient {
     }
 
     private static Double getExpirationDate(Cookie cookie, CookieObj old) {
-        Instant instant = cookie.getExpiryDate();
-        if (instant != null && !Instant.MAX.equals(instant)) {
-            return instant.toEpochMilli() / 1000D;
+        Date expiryDate = cookie.getExpiryDate();
+        if (expiryDate != null && expiryDate.getTime() != PERSISTENT_COOKIE_SENTINEL_MILLIS) {
+            return expiryDate.getTime() / 1000D;
         }
         return old == null ? null : old.expirationDate;
     }
