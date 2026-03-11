@@ -226,7 +226,7 @@ public class SideBukkit extends BaseSide {
     }
 
     private void writeString(Object buf, String data) throws InvocationTargetException, IllegalAccessException {
-        byte[] temp = data.getBytes(StandardCharsets.UTF_8);
+        byte[] temp = (data == null ? "" : data).getBytes(StandardCharsets.UTF_8);
         writeIntM.invoke(buf, temp.length);
         writeBytesM.invoke(buf, temp);
     }

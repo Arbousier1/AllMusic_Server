@@ -431,6 +431,9 @@ public abstract class BaseSide {
      * @param url 图片地址
      */
     public final void sendPic(String url) {
+        if (url == null || url.isEmpty()) {
+            return;
+        }
         for (Object player : getPlayers()) {
             String name = getPlayerName(player);
             if (name == null)
@@ -457,6 +460,9 @@ public abstract class BaseSide {
      * @param url    图片地址
      */
     public final void sendPic(String player, String url) {
+        if (url == null || url.isEmpty()) {
+            return;
+        }
         Object player1 = getPlayer(player);
         if (player1 == null)
             return;
