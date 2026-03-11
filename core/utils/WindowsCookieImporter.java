@@ -129,7 +129,7 @@ public final class WindowsCookieImporter {
                 }
             }
             String[] patterns = target.getSqlPatterns();
-            StringBuilder sql = new StringBuilder("SELECT host_key,path,name,encrypted_value,value,is_httponly FROM cookies WHERE ");
+            StringBuilder sql = new StringBuilder("SELECT host_key,path,name,encrypted_value,value,is_httponly,is_secure,expires_utc FROM cookies WHERE ");
             for (int i = 0; i < patterns.length; i++) {
                 if (i > 0) {
                     sql.append(" OR ");
@@ -156,6 +156,10 @@ public final class WindowsCookieImporter {
                 item.name = set.getString(3);
                 item.value = value;
                 item.httpOnly = set.getInt(6) == 1;
+                item.secure = set.getInt(7) == 1;
+                long expiresUtc = set.getLong(8);
+                item.session = expiresUtc <= 0;
+                item.expirationDate = item.session ? null : chromiumExpiresToUnixSeconds(expiresUtc);
                 item.hostOnly = item.domain != null && !item.domain.startsWith(".");
                 upsert(list, item);
             }
@@ -334,6 +338,21 @@ public final class WindowsCookieImporter {
             if (old.name.equalsIgnoreCase(item.name)
                     && old.domain.equalsIgnoreCase(item.domain)
                     && samePath(old.path, item.path)) {
+                if (item.expirationDate == null) {
+                    item.expirationDate = old.expirationDate;
+                }
+                if (item.sameSite == null) {
+                    item.sameSite = old.sameSite;
+                }
+                if (item.secure == null) {
+                    item.secure = old.secure;
+                }
+                if (item.session == null) {
+                    item.session = old.session;
+                }
+                if (item.storeId == null) {
+                    item.storeId = old.storeId;
+                }
                 list.remove(i);
                 break;
             }
@@ -345,6 +364,13 @@ public final class WindowsCookieImporter {
         String a1 = a == null || a.isEmpty() ? "/" : a;
         String b1 = b == null || b.isEmpty() ? "/" : b;
         return a1.equals(b1);
+    }
+
+    private static Double chromiumExpiresToUnixSeconds(long expiresUtc) {
+        if (expiresUtc <= 0) {
+            return null;
+        }
+        return (expiresUtc / 1000000D) - 11644473600D;
     }
 
     private static boolean isWindows() {

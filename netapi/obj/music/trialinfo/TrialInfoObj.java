@@ -6,24 +6,35 @@ public class TrialInfoObj {
     private List<song> data;
 
     public boolean isTrial() {
-        if (data.size() == 0)
+        song song = firstSong();
+        if (song == null) {
             return false;
-        song song = data.get(0);
-        return song.getCode() != 200;
+        }
+        return song.getCode() != 200 && !song.hasPlayableUrl();
     }
 
     public freeTrialInfo getFreeTrialInfo() {
-        song song = data.get(0);
+        song song = firstSong();
+        if (song == null) {
+            return new freeTrialInfo() {{
+                this.setEnd(30);
+            }};
+        }
         return song.getFreeTrialInfo() == null ? new freeTrialInfo() {{
             this.setEnd(30);
         }} : song.getFreeTrialInfo();
     }
 
     public String getUrl() {
-        if (data.size() == 0)
+        song song = firstSong();
+        return song == null ? null : song.getUrl();
+    }
+
+    private song firstSong() {
+        if (data == null || data.size() == 0) {
             return null;
-        song song = data.get(0);
-        return song.getUrl();
+        }
+        return data.get(0);
     }
 }
 
@@ -31,9 +42,13 @@ class song {
     private freeTrialInfo freeTrialInfo;
     private int code;
     private String url;
+    private uf uf;
 
     public String getUrl() {
-        return url;
+        if (url != null && !url.isEmpty()) {
+            return url;
+        }
+        return uf == null ? null : uf.getUrl();
     }
 
     public int getCode() {
@@ -42,5 +57,18 @@ class song {
 
     public freeTrialInfo getFreeTrialInfo() {
         return freeTrialInfo;
+    }
+
+    public boolean hasPlayableUrl() {
+        String value = getUrl();
+        return value != null && !value.isEmpty();
+    }
+}
+
+class uf {
+    private String url;
+
+    public String getUrl() {
+        return url;
     }
 }

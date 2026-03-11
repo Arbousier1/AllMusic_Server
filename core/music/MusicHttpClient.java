@@ -55,10 +55,19 @@ public class MusicHttpClient {
                 continue;
             }
             BasicClientCookie cookie1 = new BasicClientCookie(cookie.name, cookie.value);
-            cookie1.setExpiryDate(Instant.MAX);
+            if (cookie.expirationDate != null) {
+                long millis = Math.round(cookie.expirationDate * 1000D);
+                cookie1.setExpiryDate(Instant.ofEpochMilli(millis));
+            } else if (!Boolean.TRUE.equals(cookie.session)) {
+                cookie1.setExpiryDate(Instant.MAX);
+            }
             cookie1.setDomain(cookie.domain);
             cookie1.setPath(cookie.path == null || cookie.path.isEmpty() ? "/" : cookie.path);
             cookie1.setHttpOnly(cookie.httpOnly);
+            cookie1.setSecure(Boolean.TRUE.equals(cookie.secure));
+            if (cookie.sameSite != null && !cookie.sameSite.isEmpty()) {
+                cookie1.setAttribute("samesite", cookie.sameSite);
+            }
             cookieStore.addCookie(cookie1);
         }
         return cookieStore;
@@ -66,15 +75,22 @@ public class MusicHttpClient {
 
     public static void saveCookies(CookieStore cookieStore) {
         List<Cookie> cookies = cookieStore.getCookies();
+        List<CookieObj> oldList = AllMusic.cookie == null ? new ArrayList<>() : new ArrayList<>(AllMusic.cookie);
         List<CookieObj> list = new ArrayList<>();
         for (Cookie cookie : cookies) {
             CookieObj obj = new CookieObj();
             obj.domain = cookie.getDomain();
-            obj.hostOnly = false;
-            obj.httpOnly = cookie.isHttpOnly();
+            obj.path = cookie.getPath() == null || cookie.getPath().isEmpty() ? "/" : cookie.getPath();
             obj.name = cookie.getName();
-            obj.path = cookie.getPath();
             obj.value = cookie.getValue();
+            CookieObj old = findCookie(oldList, obj.domain, obj.path, obj.name);
+            obj.expirationDate = getExpirationDate(cookie, old);
+            obj.hostOnly = old != null ? old.hostOnly : (obj.domain != null && !obj.domain.startsWith("."));
+            obj.httpOnly = cookie.isHttpOnly();
+            obj.sameSite = getCookieAttribute(cookie, "samesite", old == null ? null : old.sameSite);
+            obj.secure = cookie.isSecure();
+            obj.session = isSessionCookie(cookie, old);
+            obj.storeId = old == null ? null : old.storeId;
             list.add(obj);
         }
         AllMusic.cookie = list;
@@ -179,26 +195,78 @@ public class MusicHttpClient {
         return host.equals(domain1) || host.endsWith("." + domain1);
     }
 
+    private static CookieObj findCookie(List<CookieObj> list, String domain, String path, String name) {
+        if (list == null || domain == null || name == null) {
+            return null;
+        }
+        String path1 = path == null || path.isEmpty() ? "/" : path;
+        for (CookieObj item : list) {
+            if (item == null || item.domain == null || item.name == null) {
+                continue;
+            }
+            String itemPath = item.path == null || item.path.isEmpty() ? "/" : item.path;
+            if (item.domain.equalsIgnoreCase(domain)
+                    && item.name.equalsIgnoreCase(name)
+                    && itemPath.equals(path1)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    private static Double getExpirationDate(Cookie cookie, CookieObj old) {
+        Instant instant = cookie.getExpiryDate();
+        if (instant != null && !Instant.MAX.equals(instant)) {
+            return instant.toEpochMilli() / 1000D;
+        }
+        return old == null ? null : old.expirationDate;
+    }
+
+    private static boolean isSessionCookie(Cookie cookie, CookieObj old) {
+        if (cookie.isPersistent()) {
+            return false;
+        }
+        if (old != null && old.session != null) {
+            return old.session;
+        }
+        return old == null || old.expirationDate == null;
+    }
+
+    private static String getCookieAttribute(Cookie cookie, String name, String fallback) {
+        String value = cookie.getAttribute(name);
+        if (value == null || value.isEmpty()) {
+            return fallback;
+        }
+        return value;
+    }
+
     private static void upsertCookie(List<CookieObj> list, String domain, String name, String value) {
         if (list == null || domain == null || name == null) {
             return;
         }
 
+        CookieObj oldValue = null;
         for (Iterator<CookieObj> iterator = list.iterator(); iterator.hasNext(); ) {
             CookieObj item = iterator.next();
             if (item == null || item.domain == null || item.name == null) {
                 continue;
             }
             if (item.domain.equalsIgnoreCase(domain) && item.name.equalsIgnoreCase(name)) {
+                oldValue = item;
                 iterator.remove();
             }
         }
 
         CookieObj obj = new CookieObj();
         obj.domain = domain;
-        obj.hostOnly = false;
-        obj.httpOnly = false;
+        obj.expirationDate = oldValue == null ? null : oldValue.expirationDate;
+        obj.hostOnly = oldValue != null ? oldValue.hostOnly : false;
+        obj.httpOnly = oldValue != null && oldValue.httpOnly;
         obj.path = "/";
+        obj.sameSite = oldValue == null ? null : oldValue.sameSite;
+        obj.secure = oldValue == null ? Boolean.FALSE : oldValue.secure;
+        obj.session = oldValue == null ? Boolean.FALSE : oldValue.session;
+        obj.storeId = oldValue == null ? null : oldValue.storeId;
         obj.name = name;
         obj.value = value;
         list.add(obj);
