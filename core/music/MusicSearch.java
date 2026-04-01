@@ -8,16 +8,25 @@ import com.coloryr.allmusic.server.core.objs.music.PlayerAddMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MusicSearch {
+
+    /**
+     * 搜歌结果
+     * 玩家名 结果
+     */
+    private static final Map<String, SearchPageObj> searchSave = new HashMap<>();
+
     private static final Queue<PlayerAddMusicObj> tasks = new ConcurrentLinkedQueue<>();
-    private static boolean isRun;
 
     private static void task() {
-        while (isRun) {
+        AllMusic.log.data("歌曲搜索线程启动");
+        while (AllMusic.isRun) {
             try {
                 PlayerAddMusicObj obj = tasks.poll();
                 if (obj != null) {
@@ -37,7 +46,7 @@ public class MusicSearch {
                                 .cantSearch.replace(ARG.name, obj.isDefault ? obj.args[0] : obj.args[1]));
                     else {
                         AllMusic.side.sendMessageTask(obj.sender, AllMusic.getMessage().search.res);
-                        AllMusic.addSearch(obj.name, search);
+                        addSearch(obj.name, search);
                         AllMusic.side.runTask(() -> showSearch(obj.sender, search));
                     }
                 }
@@ -47,16 +56,13 @@ public class MusicSearch {
                 e.printStackTrace();
             }
         }
+        searchSave.clear();
+        tasks.clear();
+        AllMusic.log.data("歌曲搜索线程停止");
     }
 
     public static void start() {
-        Thread taskT = new Thread(MusicSearch::task, "AllMusic_search");
-        isRun = true;
-        taskT.start();
-    }
-
-    public static void stop() {
-        isRun = false;
+        new Thread(MusicSearch::task, "allmusic_search").start();
     }
 
     public static void addSearch(PlayerAddMusicObj obj) {
@@ -164,5 +170,37 @@ public class MusicSearch {
             api = "bd";
         }
         return item.name + " [" + api + "]";
+    }
+
+    /**
+     * 添加搜歌结果
+     *
+     * @param player 用户名
+     * @param page   结果
+     */
+    public static void addSearch(String player, SearchPageObj page) {
+        player = player.toLowerCase();
+        searchSave.put(player, page);
+    }
+
+    /**
+     * 获取搜歌结果
+     *
+     * @param player 用户名
+     * @return 结果
+     */
+    public static SearchPageObj getSearch(String player) {
+        player = player.toLowerCase();
+        return searchSave.get(player);
+    }
+
+    /**
+     * 删除搜歌结果
+     *
+     * @param player 用户名
+     */
+    public static void removeSearch(String player) {
+        player = player.toLowerCase();
+        searchSave.remove(player);
     }
 }

@@ -90,7 +90,7 @@ jobs:
     - name: update
       uses: actions/upload-artifact@v4
       with:
-        name: "allmusic_server_bungeecord_velocity"
+        name: "allmusic_server_velocity"
         path: build/libs/
         
   build_fabric_1_16_5:

@@ -7,13 +7,11 @@ import com.coloryr.allmusic.server.core.music.PlayRuntime;
 import com.coloryr.allmusic.server.core.objs.CookieObj;
 import com.coloryr.allmusic.server.core.objs.config.ConfigObj;
 import com.coloryr.allmusic.server.core.objs.message.MessageObj;
-import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 import com.coloryr.allmusic.server.core.objs.music.SongInfoObj;
 import com.coloryr.allmusic.server.core.side.BaseSide;
 import com.coloryr.allmusic.server.core.side.IAllMusicLogger;
 import com.coloryr.allmusic.server.core.sql.DataSql;
 import com.coloryr.allmusic.server.core.sql.IEconomy;
-import com.coloryr.allmusic.server.core.utils.LocalCookieBridge;
 import com.coloryr.allmusic.server.netapi.meting.kugou.KugouMusicApiMain;
 import com.coloryr.allmusic.server.netapi.meting.kuwo.KuwoMusicApiMain;
 import com.coloryr.allmusic.server.netapi.NetiApiMain;
@@ -103,7 +101,7 @@ public class AllMusic {
     /**
      * 插件版本号
      */
-    public static final String version = "3.8.0";
+    public static final String version = "3.9.0";
     /**
      * 配置文件版本号
      */
@@ -112,15 +110,6 @@ public class AllMusic {
      * 语言文件配置版本号
      */
     public static final String messageVersion = "210";
-    /**
-     * 搜歌结果
-     * 玩家名 结果
-     */
-    private static final Map<String, SearchPageObj> searchSave = new ConcurrentHashMap<>();
-    /**
-     * 正在播放的玩家
-     */
-    private static final Set<String> nowPlayPlayer = ConcurrentHashMap.newKeySet();
     /**
      * 日志
      */
@@ -184,20 +173,6 @@ public class AllMusic {
         }
     }
 
-    /**
-     * 获取正在播放的玩家列表
-     *
-     * @return 列表
-     */
-    public static Set<String> getNowPlayPlayer() {
-        return Collections.unmodifiableSet(new HashSet<>(nowPlayPlayer));
-    }
-
-    /**
-     * 检查是否需要放歌
-     *
-     * @param name      用户名
-     * @param server    服务器名
      * @param checkPlay 是否检查正在播放的列表
      * @return 是否跳过放歌
      */
@@ -212,7 +187,7 @@ public class AllMusic {
                 return true;
             if (!checkPlay)
                 return false;
-            return AllMusic.containNowPlay(name);
+            return PlayMusic.containNowPlay(name);
         } catch (NoSuchElementException e) {
             return true;
         }
@@ -238,21 +213,10 @@ public class AllMusic {
                 return true;
             if (!checkPlay)
                 return false;
-            return AllMusic.containNowPlay(name);
+            return PlayMusic.containNowPlay(name);
         } catch (NoSuchElementException e) {
             return true;
         }
-    }
-
-    /**
-     * 是否存在正在播放的玩家
-     *
-     * @param player 用户名
-     * @return 是否存在
-     */
-    public static boolean containNowPlay(String player) {
-        player = player.toLowerCase();
-        return !nowPlayPlayer.contains(player);
     }
 
     /**
@@ -279,65 +243,6 @@ public class AllMusic {
             message = MessageObj.make();
         }
         return message;
-    }
-
-    /**
-     * 添加搜歌结果
-     *
-     * @param player 用户名
-     * @param page   结果
-     */
-    public static void addSearch(String player, SearchPageObj page) {
-        player = player.toLowerCase();
-        searchSave.put(player, page);
-    }
-
-    /**
-     * 获取搜歌结果
-     *
-     * @param player 用户名
-     * @return 结果
-     */
-    public static SearchPageObj getSearch(String player) {
-        player = player.toLowerCase();
-        return searchSave.get(player);
-    }
-
-    /**
-     * 删除搜歌结果
-     *
-     * @param player 用户名
-     */
-    public static void removeSearch(String player) {
-        player = player.toLowerCase();
-        searchSave.remove(player);
-    }
-
-    /**
-     * 添加正在播放的玩家
-     *
-     * @param player 用户名
-     */
-    public static void addNowPlayPlayer(String player) {
-        player = player.toLowerCase();
-        nowPlayPlayer.add(player);
-    }
-
-    /**
-     * 删除正在播放的玩家
-     *
-     * @param player 用户名
-     */
-    public static void removeNowPlayPlayer(String player) {
-        player = player.toLowerCase();
-        nowPlayPlayer.remove(player);
-    }
-
-    /**
-     * 清空正在播放玩家的列表
-     */
-    public static void clearNowPlayer() {
-        nowPlayPlayer.clear();
     }
 
     /**
@@ -394,6 +299,8 @@ public class AllMusic {
      * 启动插件
      */
     public static void start() {
+        isRun = true;
+
         MusicHttpClient.init();
         MUSIC_APIS.clear();
         PRIMARY_MUSIC_APIS.clear();
@@ -416,14 +323,10 @@ public class AllMusic {
      * 停止插件
      */
     public static void stop() {
-        PlayMusic.clearVote();
-        PlayMusic.clearPush();
-        side.sendStop();
-        LocalCookieBridge.stop();
-        MusicSearch.stop();
-        PlayMusic.stop();
+        isRun = false;
         PlayRuntime.stop();
         DataSql.stop();
+        side.sendStop();
         log.data("<light_purple>[AllMusic3]<dark_green><yellow>已停止，感谢使用");
     }
 
@@ -486,11 +389,10 @@ public class AllMusic {
     public static void joinPlay(String player) {
         DataSql.task(() -> {
             String player1 = player.toLowerCase();
-            if (DataSql.checkMutePlayer(player1) || nowPlayPlayer.contains(player1)) {
+            if (DataSql.checkMutePlayer(player1) || PlayMusic.containNowPlay(player1)) {
                 return;
             }
-            if (DataSql.checkMuteListPlayer(player1) && PlayMusic.nowPlayMusic != null
-                    && PlayMusic.nowPlayMusic.isList()) {
+            if (DataSql.checkMuteListPlayer(player1)) {
                 return;
             }
 
@@ -499,12 +401,36 @@ public class AllMusic {
                 if (music != null && PlayMusic.url != null) {
                     AllMusic.side.sendHudPos(player1);
                     AllMusic.side.sendMusic(player1, PlayMusic.url);
-                    if (!music.isUrl()) {
-                        AllMusic.side.sendPic(player1, music.getPicUrl());
-                    }
+                    AllMusic.side.sendPic(player1, music.getPicUrl());
                     AllMusic.side.sendPos(player1, (int) PlayMusic.musicNowTime);
                 }
             }, 20);
+        });
+    }
+
+    public static void joinPlay(String player, String server) {
+        DataSql.task(() -> {
+            if (server != null && AllMusic.getConfig().muteServer.contains(server)) {
+                return;
+            }
+
+            String player1 = player.toLowerCase();
+            if (DataSql.checkMutePlayer(player1)) {
+                return;
+            }
+            if (DataSql.checkMuteListPlayer(player1)) {
+                return;
+            }
+
+            AllMusic.side.runTask(() -> {
+                SongInfoObj music = PlayMusic.nowPlayMusic;
+                if (music != null && PlayMusic.url != null) {
+                    AllMusic.side.sendHudPos(player1);
+                    AllMusic.side.sendMusic(player1, PlayMusic.url);
+                    AllMusic.side.sendPic(player1, music.getPicUrl());
+                    AllMusic.side.runTask(() -> AllMusic.side.sendPos(player1, (int) PlayMusic.musicNowTime), 50);
+                }
+            });
         });
     }
 
@@ -515,12 +441,12 @@ public class AllMusic {
 
     public static Component miniMessageRun(String input, String command) {
         Component component = miniMessage(input);
-        return component.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, ClickEvent.Payload.string(command)));
+        return component.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command));
     }
 
     public static Component miniMessageSuggest(String input, String command) {
         Component component = miniMessage(input);
-        return component.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.SUGGEST_COMMAND, ClickEvent.Payload.string(command)));
+        return component.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.SUGGEST_COMMAND, command));
     }
 
     /**

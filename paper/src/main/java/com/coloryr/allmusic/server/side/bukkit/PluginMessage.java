@@ -111,7 +111,7 @@ public class PluginMessage implements PluginMessageListener {
                 String name = in.readUTF();
 
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                out.write(12);
+                out.writeInt(12);
                 out.writeUTF(uuid);
                 if (AllMusic.economy == null) {
                     out.write(0);
@@ -131,7 +131,7 @@ public class PluginMessage implements PluginMessageListener {
                 String name = in.readUTF();
 
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                out.write(13);
+                out.writeInt(13);
                 out.writeUTF(uuid);
                 if (AllMusic.economy == null) {
                     out.write(0);

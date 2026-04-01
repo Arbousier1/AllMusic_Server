@@ -4,6 +4,7 @@ import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.command.ACommand;
 import com.coloryr.allmusic.server.core.command.CommandEX;
 import com.coloryr.allmusic.server.core.command.PermissionList;
+import com.coloryr.allmusic.server.core.music.MusicSearch;
 import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 import com.coloryr.allmusic.server.core.sql.DataSql;
@@ -21,7 +22,7 @@ public class CommandSelect extends ACommand {
             AllMusic.side.sendMessage(sender, AllMusic.getMessage().search.noPer);
             return;
         }
-        SearchPageObj obj = AllMusic.getSearch(name);
+        SearchPageObj obj = MusicSearch.getSearch(name);
         if (obj == null) {
             AllMusic.side.sendMessage(sender, AllMusic.getMessage().search.emptySearch);
         } else if (!args[1].isEmpty() && Function.isInteger(args[1])) {
@@ -36,7 +37,7 @@ public class CommandSelect extends ACommand {
             AllMusic.side.sendMessage(sender,
                     AllMusic.getMessage().search.choice.replace(ARG.index, "" + a));
             DataSql.task(() -> CommandEX.addMusic(sender, name, api, id));
-            AllMusic.removeSearch(name);
+            MusicSearch.removeSearch(name);
         } else {
             AllMusic.side.sendMessage(sender, AllMusic.getMessage().search.errorNum);
         }
@@ -46,7 +47,7 @@ public class CommandSelect extends ACommand {
     public List<String> tab(Object player, String name, String[] args, int index) {
         if (args.length == 1 || (args.length == 2)) {
             List<String> list = new ArrayList<>();
-            SearchPageObj obj = AllMusic.getSearch(name);
+            SearchPageObj obj = MusicSearch.getSearch(name);
             if (obj != null) {
                 for (int a = 0; a < obj.getIndex(); a++) {
                     list.add(String.valueOf(a + 1));

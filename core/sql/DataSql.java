@@ -81,7 +81,6 @@ public class DataSql {
      * 数据库文件
      */
     public static File sqlFile;
-    private static boolean isRun;
     /**
      * 数据库链接对象
      */
@@ -731,26 +730,31 @@ public class DataSql {
      */
     public static void start() {
         init();
-        Thread thread = new Thread(DataSql::run);
-        isRun = true;
-        thread.start();
+        new Thread(DataSql::run).start();
     }
 
     /**
      * 停止数据库
      */
     public static void stop() {
-        isRun = false;
         semaphore.release();
+        try {
+            if (connection != null && connection.isClosed()) {
+                connection.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void run() {
+        AllMusic.log.data("数据库线程启动");
         Runnable runnable;
-        while (isRun) {
+        while (AllMusic.isRun) {
             try {
                 semaphore.acquire();
-                if (!isRun)
-                    return;
+                if (!AllMusic.isRun)
+                    break;
                 do {
                     runnable = tasks.poll();
                     if (runnable != null) {
@@ -762,5 +766,6 @@ public class DataSql {
                 e.printStackTrace();
             }
         }
+        AllMusic.log.data("数据库线程关闭");
     }
 }
