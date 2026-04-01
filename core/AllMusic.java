@@ -173,6 +173,7 @@ public class AllMusic {
         }
     }
 
+    /**
      * @param checkPlay 是否检查正在播放的列表
      * @return 是否跳过放歌
      */
