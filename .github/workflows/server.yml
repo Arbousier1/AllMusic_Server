@@ -86,7 +86,7 @@ jobs:
       uses: gradle/actions/setup-gradle@v3 # v3.1.0
     - name: build
       run: |
-        chmod +x link.sh && ./link.sh && cd server_top && chmod +x gradlew && ./gradlew shadowJar
+        chmod +x link.sh && ./link.sh && cd velocity && chmod +x gradlew && ./gradlew shadowJar
     - name: update
       uses: actions/upload-artifact@v4
       with:

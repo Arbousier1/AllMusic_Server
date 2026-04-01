@@ -25,7 +25,7 @@ make_link() {
 }
 
 # ================= 第 1 组数组处理 =================
-array=(folia server_top paper spigot \
+array=(folia velocity paper spigot \
 fabric_1_16_5 fabric_1_20_1 fabric_1_21 fabric_1_21_6 fabric_1_21_11 fabric_26_1 \
 forge_1_7_10 forge_1_12_2 forge_1_16_5 forge_1_20_1 \
 neoforge_1_21 neoforge_1_21_6 neoforge_1_21_11)
@@ -42,7 +42,7 @@ for i in "${array[@]}"; do
 done
 
 # ================= 第 2 组数组处理 =================
-array1=(folia server_top \
+array1=(folia velocity \
 fabric_1_16_5 fabric_1_20_1 fabric_1_21 fabric_1_21_6 fabric_1_21_11 fabric_26_1 \
 forge_1_7_10 forge_1_12_2 forge_1_16_5 forge_1_20_1 \
 neoforge_1_21 neoforge_1_21_6 neoforge_1_21_11)
