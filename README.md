@@ -155,7 +155,7 @@ name1=value1; name2=value2; name3=value3
 
 - 这个方法只能拿到浏览器 JavaScript 可见的 cookie。
 - `HttpOnly` cookie 无法通过这个页面直接读取。
-- 如果站点关键 cookie 是 `HttpOnly`，请改用“方法 1”手动导入，或用“方法 3”读取浏览器数据库。
+- 如果站点关键 cookie 是 `HttpOnly`，请改用"方法 1"手动导入，或用"方法 3"读取浏览器数据库。
 
 ### 方法 3：从 Windows 浏览器 Cookie 数据库导入
 
@@ -223,18 +223,145 @@ Cookie 导入命令属于管理员命令。
 
 ## 构建
 
-当前仓库自带的 `build.cmd` 按现状是 Windows 构建脚本。
+1. 安装JDK25、Git
+2. 使用 `git submodule update --init --recursive` 初始化项目
+3. 使用 `gradlew build` 构建
 
-要求：
+## 配置文件说明
 
-- Windows
-- 已安装可供 Gradle 使用的 JDK
-- 不同模块使用的 Java 版本不同，当前仓库内可见的目标版本主要是 Java 8 / 17 / 21
+配置文件采用json格式，需要遵守json编写的格式规范  
+- maxPlayList              最大歌曲数  
+- maxPlayerList            一个玩家最大可点数量，0代表不限制
+- minVote                  最小通过投票数
+- voteTime                 投票时间
+- lyricDelay               歌曲延迟，单位毫秒
+- defaultAddMusic          默认添加歌曲方式，1为搜歌
+- ktvLyricDelay            KTV模式歌词延迟，单位毫秒
+- adminList                管理员列表
+- muteServer               不参与点歌的服务器列表
+- mutePlayer               不参与点歌的玩家列表
+- banMusic                 禁止点歌ID列表，ID为音乐ID
+- banPlayer                禁止玩家点歌列表
+- playListSwitch           是否玩家点歌后是否直接从空闲歌单切换至玩家歌曲
+- playListRandom           是否空闲歌单随机播放
+- sendLyric                是否发送歌词到客户端
+- needPermission           是否指令需要权限
+- topAPI                  是否启用顶层模式，用于和BC交换数据
+- mutePlayMessage          是否不发送播放信息
+- muteAddMessage           是否不发送点歌信息
+- showInBar                是否将信息限制在bar处
+- ktvMode                  是否启用KTV歌词
+- musicBR                  歌曲音质
+- version                  配置文件版本号
+- defaultHud               默认Hud配置
+    - list                 播放列表Hud配置
+        - x                x轴间距
+        - y                y轴间距
+        - dir              对齐方式
+        - color            字体颜色
+        - shadow           是否显示字体阴影
+        - enable           是否启用
+    - lyric                歌词Hud配置
+        - x
+        - y
+        - dir  
+        - color 
+        - shadow 
+        - enable 
+    - info                 歌曲信息Hud配置
+        - x
+        - y
+        - dir
+        - color
+        - shadow
+        - enable
+    - pic                  图片显示配置
+        - x
+        - y
+        - dir
+        - color            图片尺寸
+        - shadow           是否开启图片旋转
+        - enable
+    - picRotateSpeed       图片旋转速度
+- economy                  经济扩展配置
+    - mysqlUrl             目前无用
+    - backend              目前无用
+    - vault                是否使用vault插件
+- funConfig                娱乐选项
+    - rain                 是否启用随机下雨
+    - rainRate             随机下雨概率
+- limit                    限制设置
+    - messageLimit         是否启用广播消息长度限制
+    - messageLimitSize     广播消息限制长度
+    - listLimit            是否启用歌曲列表长度限制
+    - listLimitSize        歌曲列表限制长度
+    - infoLimit            是否启用信息长度限制
+    - infoLimitSize        信息长限制长度
+    - musicTimeLimit       是否启用歌曲长度限制
+    - maxMusicTime         限制最长歌曲长度，单位秒
+    - limitText            限制长度替换文本
+- cost                     花费相关配置
+    - searchCost           搜歌花费
+    - addMusicCost         点歌花费
+    - useCost              启用花费
+- sendDelay                Hud信息更新延迟
+- defaultApi               默认音乐API
 
-执行：
+## 指令说明
 
-```bat
-build.cmd
-```
+普通玩家指令  
+- /music [音乐ID/网易云分享链接] 点歌
+- /music [音乐API] [音乐ID] 点歌
+- /music stop 停止播放歌曲
+- /music list 查看歌曲队列
+- /music cancel [序号] 取消你的点歌
+- /music vote 投票切歌
+- /music vote cancel 取消发起的切歌
+- /music push [序号] 投票将歌曲插入到队列头
+- /music push cancel 取消发起的插歌
+- /music mute 不再参与点歌，再输入一次恢复
+- /music mute list 不接收空闲列表点歌，再输入一次恢复
+- /music search [歌名] 搜索歌曲
+- /music search [音乐API] [歌名] 搜索歌曲
+- /music select [序列] 选择歌曲
+- /music nextpage 切换下一页歌曲搜索结果
+- /music lastpage 切换上一页歌曲搜索结果
+- /music hud enable 启用/关闭全部界面
+- /music hud reset 重置全部界面
+- /music hud [位置] enable 启用关闭单一界面
+- /music hud [位置] pos [x] [y] 设置某个界面的位置
+- /music hud [位置] dir [对齐方式] 设置某个界面的对齐方式
+- /music hud [位置] color [颜色HEX] 设置某个界面的颜色
+- /music hud [位置] reset 重置单一界面
+- /music hud pic size [尺寸] 设置图片尺寸
+- /music hud pic rotate [开关] 设置图片旋转模式
+- /music hud pic speed [数值] 设置图片旋转速度
 
-脚本会先执行 `link.cmd`，再让你选择要构建的平台模块。
+以下方式才是管理员  
+- 在配置文件给自己管理员
+- bukkit/spigot/paper/folia 服务器给自己op
+- forge/fabric/neoforge 服务器给自己等级权限2
+- bc/velocity 只能在配置文件写上自己的游戏名
+
+管理员指令 
+- /music reload 重读配置文件
+- /music next 强制切歌
+- /music ban [ID] 禁止点这首歌
+- /music ban [音乐API] [ID] 禁止点这首歌
+- /music unban [ID] 解禁点这首歌
+- /music unban [音乐API] [ID] 解禁点这首歌
+- /music banplayer [ID] 禁止某位玩家点歌
+- /music unbanplayer [ID] 解禁某位玩家点歌
+- /music delete [序号] 删除队列中的歌曲
+- /music addlist [歌单ID] 添加歌单到空闲列表
+- /music clearlist 清空空闲歌单
+- /music clearban 清空禁止点歌列表
+- /music clearbanplayer 清空禁止点歌玩家列表
+- /music test [ID] 测试歌曲内容解析
+- /music test [音乐API] [ID] 测试歌曲内容解析
+
+若开启权限后  
+- 点歌需要权限`allmusic.addmusic`
+- 搜歌需要权限`allmusic.search`
+- 插歌需要权限`allmusic.push`
+- 投票切歌需要权限`allmusic.vote`
