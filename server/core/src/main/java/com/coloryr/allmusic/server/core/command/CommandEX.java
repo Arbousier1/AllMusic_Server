@@ -72,6 +72,7 @@ public class CommandEX {
         commandAdminList.put("baiducookie", new CommandCookie());
         commandAdminList.put("taihecookie", new CommandCookie());
         commandAdminList.put("qianqiancookie", new CommandCookie());
+        commandAdminList.put("qrlogin", new CommandQrLogin());
 
         normal.addAll(commandList.keySet());
         admin.addAll(commandAdminList.keySet());

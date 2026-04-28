@@ -10,35 +10,40 @@ public final class CookieImportApi {
             "QQ Music",
             "https://y.qq.com",
             new String[]{"y.qq.com", ".y.qq.com", "u.y.qq.com", "c.y.qq.com", ".qq.com"},
-            new String[]{"%.qq.com", "%.y.qq.com", "y.qq.com", "c.y.qq.com", "u.y.qq.com"}
+            new String[]{"%.qq.com", "%.y.qq.com", "y.qq.com", "c.y.qq.com", "u.y.qq.com"},
+            false
     );
     private static final Target NETEASE = new Target(
             "netease",
             "NetEase Cloud Music",
             "https://music.163.com",
             new String[]{"music.163.com", ".music.163.com", "interface3.music.163.com", ".163.com"},
-            new String[]{"%.163.com", "%.music.163.com", "music.163.com", "interface3.music.163.com"}
+            new String[]{"%.163.com", "%.music.163.com", "music.163.com", "interface3.music.163.com"},
+            true
     );
     private static final Target KUGOU = new Target(
             "kugou",
             "Kugou Music",
             "https://www.kugou.com",
             new String[]{"www.kugou.com", ".kugou.com", "m.kugou.com", "mobilecdn.kugou.com", "wwwapi.kugou.com"},
-            new String[]{"%.kugou.com", "www.kugou.com", "m.kugou.com", "mobilecdn.kugou.com", "wwwapi.kugou.com"}
+            new String[]{"%.kugou.com", "www.kugou.com", "m.kugou.com", "mobilecdn.kugou.com", "wwwapi.kugou.com"},
+            false
     );
     private static final Target KUWO = new Target(
             "kuwo",
             "Kuwo Music",
             "https://www.kuwo.cn",
             new String[]{"www.kuwo.cn", ".kuwo.cn", "m.kuwo.cn"},
-            new String[]{"%.kuwo.cn", "www.kuwo.cn", "m.kuwo.cn"}
+            new String[]{"%.kuwo.cn", "www.kuwo.cn", "m.kuwo.cn"},
+            false
     );
     private static final Target BAIDU = new Target(
             "baidu",
             "Baidu Music",
             "https://music.91q.com",
             new String[]{"musicapi.taihe.com", ".taihe.com", ".qianqian.com"},
-            new String[]{"%.taihe.com", "%.qianqian.com", "musicapi.taihe.com"}
+            new String[]{"%.taihe.com", "%.qianqian.com", "musicapi.taihe.com"},
+            false
     );
 
     private CookieImportApi() {
@@ -93,15 +98,18 @@ public final class CookieImportApi {
         public final String id;
         public final String displayName;
         public final String siteUrl;
+        public final boolean supportsQrLogin;
         private final String[] importDomains;
         private final String[] sqlPatterns;
 
-        private Target(String id, String displayName, String siteUrl, String[] importDomains, String[] sqlPatterns) {
+        private Target(String id, String displayName, String siteUrl, String[] importDomains,
+                       String[] sqlPatterns, boolean supportsQrLogin) {
             this.id = id;
             this.displayName = displayName;
             this.siteUrl = siteUrl;
             this.importDomains = importDomains;
             this.sqlPatterns = sqlPatterns;
+            this.supportsQrLogin = supportsQrLogin;
         }
 
         public String[] getImportDomains() {
