@@ -7,4 +7,5 @@ object Versions {
     const val gson = "2.14.0"
     const val minimessage = "4.26.1"
     const val adventure = "4.8.1"
+    const val zxing = "3.5.3"
 }
