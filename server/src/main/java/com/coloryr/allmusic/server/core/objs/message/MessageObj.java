@@ -15,7 +15,7 @@ public class MessageObj {
     public CommandObj command;
     public CustomObj custom;
     public PAPIObj papi;
-    public CostObj cost;
+    public CostMessageObj cost;
     public ClickObj click;
     public HelpObj help;
     public FunObj fun;
@@ -121,7 +121,7 @@ public class MessageObj {
 
         if (cost == null) {
             saveConfig = true;
-            cost = CostObj.make();
+            cost = CostMessageObj.make();
         } else if (cost.check()) {
             saveConfig = true;
             cost.init();
@@ -182,7 +182,7 @@ public class MessageObj {
         hudList = HudNameObj.make();
         custom = CustomObj.make();
         papi = PAPIObj.make();
-        cost = CostObj.make();
+        cost = CostMessageObj.make();
         click = ClickObj.make();
         help = HelpObj.make();
         fun = FunObj.make();

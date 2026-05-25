@@ -29,7 +29,7 @@ public class AllMusicServer {
 
     @SubscribeEvent
     public static void commonSetup(final FMLCommonSetupEvent event) {
-        AllMusic.log = new LogForge();
+        AllMusic.log = new LogNeoForge();
         AllMusic.side = new SideNeoForge();
     }
 

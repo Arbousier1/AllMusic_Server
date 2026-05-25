@@ -1,3 +1,6 @@
+java.sourceCompatibility = JavaVersion.VERSION_17
+java.targetCompatibility = JavaVersion.VERSION_17
+
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://nexus.velocitypowered.com/repository/maven-public/")

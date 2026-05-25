@@ -1,13 +1,13 @@
 package com.coloryr.allmusic.server.core.objs.message;
 
-public class CostObj {
+public class CostMessageObj {
     public String search;
     public String addMusic;
     public String noMoney;
     public String costFail;
 
-    public static CostObj make() {
-        CostObj obj = new CostObj();
+    public static CostMessageObj make() {
+        CostMessageObj obj = new CostMessageObj();
         obj.init();
 
         return obj;

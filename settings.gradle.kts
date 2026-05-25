@@ -58,10 +58,7 @@ include(":server:neoforge_26_1")
 include(":server:spigot")
 include(":server:paper")
 include(":server:folia")
-include(":server:paper")
 include(":server:velocity")
-
-include(":onejar")
 
 pluginManagement {
     repositories {
