@@ -1,5 +1,5 @@
 plugins {
-    id("net.fabricmc.fabric-loom") version "1.15-SNAPSHOT"
+    id("net.fabricmc.fabric-loom") version Versions.fabricLoom
 }
 
 java.sourceCompatibility = JavaVersion.VERSION_25
@@ -10,14 +10,8 @@ dependencies {
     implementation("net.fabricmc:fabric-loader:0.18.6")
 
     implementation("net.fabricmc.fabric-api:fabric-api:0.145.1+26.1")
-    implementation("net.kyori:adventure-platform-fabric:6.9.0")
 
-    shadow("net.kyori:adventure-text-minimessage:4.26.1")
-    shadow("net.kyori:adventure-api:4.26.1")
-    shadow("net.kyori:adventure-text-serializer-gson:4.8.1")
-    shadow("net.kyori:adventure-text-serializer-legacy:4.8.1")
-    shadow("net.kyori:adventure-text-serializer-plain:4.8.1")
-    shadow("net.kyori:adventure-key:4.8.1")
+    implementation(include("net.kyori:adventure-platform-fabric:6.9.0")!!)
 }
 
 tasks {
@@ -31,10 +25,10 @@ tasks {
 
     shadowJar {
         archiveFileName.set("[fabric-26.1]AllMusic_Server-${project.version}.jar")
-        destinationDirectory.set(file("${parent!!.projectDir}/target"))
+        destinationDirectory.set(file("${parent!!.projectDir}/../build"))
 
-        relocate("net.kyori", "com.coloryr.allmusic.libs.net.kyori")
-        relocate("com.google.gson", "com.coloryr.allmusic.libs.com.google.gson")
+//        relocate("net.kyori", "com.coloryr.allmusic.libs.net.kyori")
+//        relocate("com.google.gson", "com.coloryr.allmusic.libs.com.google.gson")
     }
 
     build {

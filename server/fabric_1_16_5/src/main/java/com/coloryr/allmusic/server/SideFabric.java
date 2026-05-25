@@ -2,6 +2,7 @@ package com.coloryr.allmusic.server;
 
 import com.coloryr.allmusic.buffercodec.MusicPacketCodec;
 import com.coloryr.allmusic.codec.CommandType;
+import com.coloryr.allmusic.codec.MusicPack;
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.objs.music.PlayerAddMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.SongInfoObj;
@@ -14,6 +15,7 @@ import net.kyori.adventure.text.Component;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
 
 import java.io.File;
 import java.util.Collection;
@@ -71,16 +73,16 @@ public class SideFabric extends BaseSide {
     }
 
     @Override
-    public void send(Object player, CommandType type, String data, int data1) {
+    public void send(Object player, MusicPack pack) {
         if (player instanceof ServerPlayer) {
             ServerPlayer player1 = (ServerPlayer) player;
-            send(player1, MusicPacketCodec.pack(type, data, data1));
+            send(player1, MusicPacketCodec.pack(pack));
         }
     }
 
     @Override
     public Object getPlayer(String player) {
-        return null;
+        return AllMusicServer.server.getPlayerList().getPlayerByName(player);
     }
 
     @Override
@@ -98,6 +100,9 @@ public class SideFabric extends BaseSide {
 
     @Override
     public boolean needPlay(boolean islist) {
+        if (AllMusicServer.server == null || AllMusicServer.server.getPlayerList() == null) {
+            return false;
+        }
         for (ServerPlayer player : AllMusicServer.server.getPlayerList().getPlayers()) {
             if (!AllMusic.isSkip(player.getName().getString(), null, false, islist)) {
                 return true;
@@ -123,7 +128,7 @@ public class SideFabric extends BaseSide {
 
     @Override
     public boolean onMusicPlay(SongInfoObj obj) {
-        return MusicPlayEvent.EVENT.invoker().interact(obj);
+        return MusicPlayEvent.EVENT.invoker().interact(obj) != InteractionResult.PASS;
     }
 
     @Override
@@ -133,7 +138,7 @@ public class SideFabric extends BaseSide {
         if (sender.getEntity() instanceof ServerPlayer) {
             entity = (ServerPlayer) sender.getEntity();
         }
-        return MusicAddEvent.EVENT.invoker().interact(entity, music);
+        return MusicAddEvent.EVENT.invoker().interact(entity, music) != InteractionResult.PASS;
     }
 
     private void send(ServerPlayer players, ByteBuf data) {
