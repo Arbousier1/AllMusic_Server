@@ -30,7 +30,16 @@ jobs:
     - name: build
       shell: cmd
       run: |
-        gradlew build
+        gradlew :server:build :server:paper:build :server:spigot:build :server:velocity:build :server:folia:build --stacktrace --info
+    - name: upload build reports on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-reports
+        path: |
+          **/build/reports/
+          **/build/test-results/
+        retention-days: 7
     - name: update
       if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref_name, 'debug')
       uses: actions/upload-artifact@v4
