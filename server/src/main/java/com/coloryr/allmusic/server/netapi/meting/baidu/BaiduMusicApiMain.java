@@ -7,7 +7,7 @@ import com.coloryr.allmusic.server.core.objs.SearchMusicObj;
 import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 import com.coloryr.allmusic.server.core.objs.music.SongInfoObj;
-import com.coloryr.allmusic.server.core.sql.DataSql;
+import com.coloryr.allmusic.server.core.saves.MusicListSave;
 import com.coloryr.allmusic.server.netapi.meting.BaseMetingApi;
 import com.coloryr.allmusic.server.netapi.meting.MetingHttpClient;
 import com.google.gson.JsonArray;
@@ -117,7 +117,7 @@ public class BaiduMusicApiMain extends BaseMetingApi {
                     if (ids.isEmpty()) {
                         return;
                     }
-                    DataSql.addIdleList(ids, getId());
+                    MusicListSave.addIdleList(ids, getId());
                     String name = firstString(root, "title", "listTitle");
                     AllMusic.side.sendMessageTask(sender,
                             AllMusic.getMessage().musicPlay.listMusic.get.replace(ARG.name, defaultIfBlank(name, id)));

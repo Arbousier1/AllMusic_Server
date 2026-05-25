@@ -10,7 +10,7 @@ import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.LyricItemObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 import com.coloryr.allmusic.server.core.objs.music.SongInfoObj;
-import com.coloryr.allmusic.server.core.sql.DataSql;
+import com.coloryr.allmusic.server.core.saves.MusicListSave;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -152,7 +152,7 @@ public class QqMusicApiMain implements IMusicApi {
                         return;
                     }
 
-                    DataSql.addIdleList(ids, getId());
+                    MusicListSave.addIdleList(ids, getId());
                     String name = firstString(root, "cdlist.0.dissname");
                     if (isBlank(name)) {
                         name = id;

@@ -504,16 +504,6 @@ public class PlayMusic {
                 if (size > len / 2) {
                     size = len / 2;
                 }
-                synchronized (DEEP_LOCK) {
-                    while (deep.size() >= size) {
-                        deep.poll();
-                    }
-                    do {
-                        music = DataSql.readListItem();
-                    }
-                    while (checkDeep(music));
-                    deep.add(music);
-                }
                 while (deep.size() >= size) {
                     deep.poll();
                 }
