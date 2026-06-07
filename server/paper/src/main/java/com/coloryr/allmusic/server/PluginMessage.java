@@ -26,7 +26,7 @@ public class PluginMessage implements PluginMessageListener {
         info = (TopSongInfoObj) PlayMusic.nowPlayMusic;
         lyric = (TopLyricSave) PlayMusic.lyric;
 
-        clearTask = Bukkit.getScheduler().runTaskTimer(AllMusicBukkit.plugin, PluginMessage::clear, 0L, 20L * 30);
+        clearTask = Bukkit.getScheduler().runTaskTimer(AllMusicPaper.plugin, PluginMessage::clear, 0L, 20L * 30);
     }
 
     private static void clear() {
@@ -35,7 +35,7 @@ public class PluginMessage implements PluginMessageListener {
 
     private static void sendPack(byte[] data) {
         if (!Bukkit.isPrimaryThread()) {
-            Bukkit.getScheduler().runTask(AllMusicBukkit.plugin, () -> sendPack(data));
+            Bukkit.getScheduler().runTask(AllMusicPaper.plugin, () -> sendPack(data));
             return;
         }
         Player player = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
