@@ -8,6 +8,7 @@ import com.coloryr.allmusic.server.core.objs.music.PlayerAddMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,17 +31,7 @@ public class MusicSearch {
             try {
                 PlayerAddMusicObj obj = tasks.poll();
                 if (obj != null) {
-                    SearchPageObj search;
-                    if ("all".equalsIgnoreCase(obj.api)) {
-                        search = searchAll(obj);
-                    } else {
-                        IMusicApi api = AllMusic.getMusicApi(obj.api);
-                        if (api == null) {
-                            AllMusic.side.sendMessageTask(obj.sender, AllMusic.getUnknownApiMessage());
-                            continue;
-                        }
-                        search = api.search(obj.args, obj.isDefault);
-                    }
+                    SearchPageObj search = searchApis(obj);
                     if (search == null)
                         AllMusic.side.sendMessageTask(obj.sender, AllMusic.getMessage().search
                                 .cantSearch.replace(ARG.name, obj.isDefault ? obj.args[0] : obj.args[1]));
@@ -69,11 +60,20 @@ public class MusicSearch {
         tasks.add(obj);
     }
 
-    private static SearchPageObj searchAll(PlayerAddMusicObj obj) {
+    private static SearchPageObj searchApis(PlayerAddMusicObj obj) {
+        Collection<IMusicApi> apis = AllMusic.getMusicApis(obj.api);
+        if (apis.isEmpty()) {
+            AllMusic.side.sendMessageTask(obj.sender, AllMusic.getUnknownApiMessage());
+            return null;
+        }
+        if (apis.size() == 1) {
+            return apis.iterator().next().search(obj.args, obj.isDefault);
+        }
+
         List<List<SearchMusicObj>> groups = new ArrayList<List<SearchMusicObj>>();
         List<SearchMusicObj> res = new ArrayList<>();
         int max = 0;
-        for (IMusicApi api : AllMusic.getRegisteredMusicApis()) {
+        for (IMusicApi api : apis) {
             List<SearchMusicObj> items = searchByApi(api, obj);
             if (items.isEmpty()) {
                 continue;
@@ -91,7 +91,7 @@ public class MusicSearch {
                 }
             }
         }
-        return new SearchPageObj(res, Math.max(1, (res.size() + 9) / 10), "all");
+        return new SearchPageObj(res, Math.max(1, (res.size() + 9) / 10), obj.api);
     }
 
     private static List<SearchMusicObj> searchByApi(IMusicApi api, PlayerAddMusicObj obj) {

@@ -14,11 +14,8 @@ import com.coloryr.allmusic.server.core.saves.MusicListSave;
 import com.coloryr.allmusic.server.core.saves.SaveTask;
 import com.coloryr.allmusic.server.core.side.BaseSide;
 import com.coloryr.allmusic.server.core.side.IAllMusicLogger;
+import com.coloryr.allmusic.server.core.utils.MusicApiLoader;
 import com.coloryr.allmusic.server.core.utils.StringReplacer;
-import com.coloryr.allmusic.server.netapi.meting.kugou.KugouMusicApiMain;
-import com.coloryr.allmusic.server.netapi.meting.kuwo.KuwoMusicApiMain;
-import com.coloryr.allmusic.server.netapi.NetiApiMain;
-import com.coloryr.allmusic.server.netapi.qq.QqMusicApiMain;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -42,6 +39,7 @@ public class AllMusic {
 
     public static final Map<String, IMusicApi> MUSIC_APIS = new ConcurrentHashMap<>();
     private static final Map<String, IMusicApi> PRIMARY_MUSIC_APIS = Collections.synchronizedMap(new LinkedHashMap<String, IMusicApi>());
+    private static final Map<String, LinkedHashMap<String, IMusicApi>> MUSIC_API_GROUPS = Collections.synchronizedMap(new LinkedHashMap<String, LinkedHashMap<String, IMusicApi>>());
 
     private static String normalizeApiKey(String api) {
         if (api == null) {
@@ -59,14 +57,55 @@ public class AllMusic {
         if (id != null && !id.isEmpty()) {
             MUSIC_APIS.put(id, api);
             PRIMARY_MUSIC_APIS.put(id, api);
+            addMusicApiGroup(id, api);
+            addMusicApiGroup(getMusicApiGroup(id), api);
         }
 
         for (String alias : aliases) {
             String key = normalizeApiKey(alias);
             if (key != null && !key.isEmpty()) {
                 MUSIC_APIS.put(key, api);
+                addMusicApiGroup(key, api);
+                addMusicApiGroup(getMusicApiGroup(key), api);
             }
         }
+    }
+
+    private static void addMusicApiGroup(String group, IMusicApi api) {
+        String key = normalizeApiKey(group);
+        String id = normalizeApiKey(api == null ? null : api.getId());
+        if (key == null || key.isEmpty() || id == null || id.isEmpty()) {
+            return;
+        }
+        LinkedHashMap<String, IMusicApi> apis = MUSIC_API_GROUPS.get(key);
+        if (apis == null) {
+            apis = new LinkedHashMap<String, IMusicApi>();
+            MUSIC_API_GROUPS.put(key, apis);
+        }
+        apis.put(id, api);
+    }
+
+    private static String getMusicApiGroup(String api) {
+        String key = normalizeApiKey(api);
+        if (key == null || key.isEmpty()) {
+            return null;
+        }
+        if (key.contains("netease") || key.contains("wangyi") || key.contains("163") || key.contains("netapi")) {
+            return "netease";
+        }
+        if (key.contains("qq") || key.contains("tencent")) {
+            return "qq";
+        }
+        if (key.contains("kugou")) {
+            return "kugou";
+        }
+        if (key.contains("kuwo")) {
+            return "kuwo";
+        }
+        if (key.contains("baidu") || key.contains("taihe") || key.contains("qianqian")) {
+            return "baidu";
+        }
+        return key;
     }
 
     public static IMusicApi getMusicApi(String api) {
@@ -75,6 +114,26 @@ public class AllMusic {
             return null;
         }
         return MUSIC_APIS.get(key);
+    }
+
+    public static Collection<IMusicApi> getMusicApis(String api) {
+        String key = normalizeApiKey(api);
+        if (key == null || key.isEmpty() || "all".equalsIgnoreCase(key)) {
+            return getRegisteredMusicApis();
+        }
+        LinkedHashMap<String, IMusicApi> group = MUSIC_API_GROUPS.get(key);
+        if (group != null && !group.isEmpty()) {
+            return Collections.unmodifiableCollection(new ArrayList<IMusicApi>(group.values()));
+        }
+        IMusicApi item = MUSIC_APIS.get(key);
+        if (item == null) {
+            return Collections.emptyList();
+        }
+        return Collections.singletonList(item);
+    }
+
+    public static boolean hasMusicApis(String api) {
+        return !getMusicApis(api).isEmpty();
     }
 
     public static String getMusicApiList() {
@@ -153,6 +212,8 @@ public class AllMusic {
      * 语言文件
      */
     private static File messageFile;
+
+    private static File apis;
     /**
      * 正则替换器
      */
@@ -315,17 +376,22 @@ public class AllMusic {
         MusicHttpClient.init();
         MUSIC_APIS.clear();
         PRIMARY_MUSIC_APIS.clear();
-
-        IMusicApi api = new NetiApiMain();
-        registerMusicApi(api, "163", "netease", "wangyi", "wy");
-        registerMusicApi(new QqMusicApiMain(), "qq", "qqmusic", "tencent");
-        registerMusicApi(new KugouMusicApiMain(), "kugou", "kg");
-        registerMusicApi(new KuwoMusicApiMain(), "kuwo", "kw");
+        MUSIC_API_GROUPS.clear();
 
         PlayMusic.start();
         PlayRuntime.start();
         MusicSearch.start();
         SaveTask.start();
+
+        List<IMusicApi> list = MusicApiLoader.loadFromDirectory(apis);
+        for (IMusicApi item : list) {
+            AllMusic.log.data("<light_purple>[AllMusic3]<yellow>注册音乐API：" + item.getId());
+            registerMusicApi(item);
+        }
+
+        if (MUSIC_APIS.isEmpty()) {
+            AllMusic.log.data("<light_purple>[AllMusic3]<red>没有注册音乐");
+        }
 
         log.data("<light_purple>[AllMusic3]<yellow>已启动-" + version);
     }
@@ -462,8 +528,8 @@ public class AllMusic {
     public static void init(File file) {
         log.data("<light_purple>[AllMusic3]<yellow>正在启动，感谢使用，本插件交流群：571239090");
         try {
-            if (!file.exists())
-                file.mkdir();
+            file.mkdir();
+
             configFile = new File(file, "config.json");
             messageFile = new File(file, "message.json");
             cookieFile = new File(file, "cookie.json");
@@ -482,6 +548,10 @@ public class AllMusic {
             MusicListSave.init(file);
 
             loadConfig();
+
+            apis = new File(file, "api");
+            apis.mkdirs();
+
             isRun = true;
         } catch (IOException e) {
             isRun = false;

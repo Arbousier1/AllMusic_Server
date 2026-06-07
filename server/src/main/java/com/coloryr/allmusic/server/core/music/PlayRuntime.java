@@ -71,7 +71,6 @@ public class PlayRuntime {
         HudUtils.sendHudNowData();
         HudUtils.sendHudTime();
         HudUtils.sendHudLyricData();
-        HudUtils.sendHudListData();
     }
 
 
@@ -206,7 +205,6 @@ public class PlayRuntime {
                     HudUtils.sendHudNowData();
                     HudUtils.sendHudTime();
                     HudUtils.sendHudLyricData();
-                    HudUtils.sendHudListData();
                     AllMusic.side.sendHudUtilsAll();
                     PlayMusic.nowPlayMusic = PlayMusic.remove(0);
                     if (AllMusic.side.onMusicPlay(PlayMusic.nowPlayMusic)) {
@@ -263,12 +261,9 @@ public class PlayRuntime {
                             AllMusic.side.sendPic(PlayMusic.nowPlayMusic.getPicUrl());
                         }
                         if (PlayMusic.nowPlayMusic.isTrial()) {
-                            String trialMessage = "<light_purple>[AllMusic3]<yellow>\u6b4c\u66f2"
-                                    + PlayMusic.nowPlayMusic.getName()
-                                    + "\u4ec5\u652f\u6301\u8bd5\u542c\uff0c\u9700\u8981\u4f1a\u5458\u6216\u5bf9\u5e94\u5e73\u53f0\u64ad\u653e\u6743\u9650";
-                            AllMusic.side.broadcastInTask(trialMessage);
-                            PlayMusic.musicLessTime = PlayMusic.nowPlayMusic.getTrialInfo().getEnd();
-                            PlayMusic.musicNowTime = PlayMusic.nowPlayMusic.getTrialInfo().getStart();
+                            AllMusic.side.broadcastInTask(AllMusic.getMessage().musicPlay.trail);
+                            PlayMusic.musicLessTime = PlayMusic.nowPlayMusic.getTrialInfo().end;
+                            PlayMusic.musicNowTime = PlayMusic.nowPlayMusic.getTrialInfo().start;
                         }
 
                         AllMusic.side.updateInfo();
@@ -276,7 +271,6 @@ public class PlayRuntime {
                         while (PlayMusic.musicLessTime > 0) {
                             HudUtils.sendHudNowData();
                             HudUtils.sendHudTime();
-                            HudUtils.sendHudListData();
                             if (PlayMusic.nowPlayMusic == null || !AllMusic.side.needPlay(PlayMusic.nowPlayMusic.isList())) {
                                 PlayMusic.musicLessTime = 10;
                             }
