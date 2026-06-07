@@ -109,7 +109,7 @@ public abstract class BaseMetingApi implements IMusicApi {
             }
             String text = line.replaceAll("\\[[^]]+]", "").trim();
             for (Long time : times) {
-                map.put(time, new LyricItemObj(text, transMap.get(time)));
+                map.put(time, new LyricItemObj(text, transMap.get(time), time));
             }
         }
         return map;
