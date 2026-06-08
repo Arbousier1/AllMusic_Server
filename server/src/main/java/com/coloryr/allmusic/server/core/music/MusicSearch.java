@@ -2,6 +2,7 @@ package com.coloryr.allmusic.server.core.music;
 
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.IMusicApi;
+import com.coloryr.allmusic.server.core.music.search.SearchSessionStore;
 import com.coloryr.allmusic.server.core.objs.SearchMusicObj;
 import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.PlayerAddMusicObj;
@@ -9,19 +10,13 @@ import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MusicSearch {
 
-    /**
-     * 搜歌结果
-     * 玩家名 结果
-     */
-    private static final Map<String, SearchPageObj> searchSave = new HashMap<>();
+    private static final SearchSessionStore searchSessionStore = new SearchSessionStore();
 
     private static final Queue<PlayerAddMusicObj> tasks = new ConcurrentLinkedQueue<>();
 
@@ -47,7 +42,7 @@ public class MusicSearch {
                 e.printStackTrace();
             }
         }
-        searchSave.clear();
+        searchSessionStore.clear();
         tasks.clear();
         AllMusic.log.data("歌曲搜索线程停止");
     }
@@ -179,8 +174,7 @@ public class MusicSearch {
      * @param page   结果
      */
     public static void addSearch(String player, SearchPageObj page) {
-        player = player.toLowerCase();
-        searchSave.put(player, page);
+        searchSessionStore.addSearch(player, page);
     }
 
     /**
@@ -190,8 +184,7 @@ public class MusicSearch {
      * @return 结果
      */
     public static SearchPageObj getSearch(String player) {
-        player = player.toLowerCase();
-        return searchSave.get(player);
+        return searchSessionStore.getSearch(player);
     }
 
     /**
@@ -200,7 +193,6 @@ public class MusicSearch {
      * @param player 用户名
      */
     public static void removeSearch(String player) {
-        player = player.toLowerCase();
-        searchSave.remove(player);
+        searchSessionStore.removeSearch(player);
     }
 }
