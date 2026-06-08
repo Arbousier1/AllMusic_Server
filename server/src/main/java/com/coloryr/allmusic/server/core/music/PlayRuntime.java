@@ -53,7 +53,7 @@ public class PlayRuntime {
             service2.shutdown();
             service2 = null;
         }
-        PlayMusic.musicLessTime = 0;
+        PlayMusic.setMusicLessTime(0);
     }
 
     /**
@@ -61,11 +61,7 @@ public class PlayRuntime {
      */
     private static void clear() {
         isPlay = false;
-        PlayMusic.musicNowTime = 0;
-        PlayMusic.musicAllTime = 0;
-        PlayMusic.musicLessTime = 0;
-        PlayMusic.lyric = null;
-        PlayMusic.nowPlayMusic = null;
+        PlayMusic.clearPlaybackState();
         AllMusic.side.updateInfo();
         HudUtils.sendClearHud();
         HudUtils.sendHudNowData();
@@ -79,11 +75,11 @@ public class PlayRuntime {
      */
     private static void time1() {
         if (isPlay) {
-            PlayMusic.musicNowTime += 10;
+            PlayMusic.addMusicNowTime(10);
             if (PlayMusic.musicLessTime >= 10) {
-                PlayMusic.musicLessTime -= 10;
+                PlayMusic.addMusicLessTime(-10);
             } else {
-                PlayMusic.musicLessTime = 0;
+                PlayMusic.setMusicLessTime(0);
             }
         }
 
@@ -172,7 +168,7 @@ public class PlayRuntime {
                     AllMusic.side.broadcastInTask(AllMusic.getMessage().vote.timeOut);
                 } else {
                     if (PlayMusic.getVoteCount() >= getMiniVote()) {
-                        PlayMusic.musicLessTime = 0;
+                        PlayMusic.setMusicLessTime(0);
                         PlayMusic.clearVote();
                         AllMusic.side.broadcastInTask(AllMusic.getMessage().vote.voteDone);
                     }
@@ -206,7 +202,7 @@ public class PlayRuntime {
                     HudUtils.sendHudTime();
                     HudUtils.sendHudLyricData();
                     AllMusic.side.sendHudUtilsAll();
-                    PlayMusic.nowPlayMusic = PlayMusic.remove(0);
+                    PlayMusic.setNowPlayMusic(PlayMusic.remove(0));
                     if (AllMusic.side.onMusicPlay(PlayMusic.nowPlayMusic)) {
                         AllMusic.side.broadcastInTask(AllMusic.getMessage().musicPlay.cancel);
                         continue;
@@ -218,23 +214,24 @@ public class PlayRuntime {
                         continue;
                     }
 
-                    PlayMusic.url = PlayMusic.nowPlayMusic.getPlayerUrl() == null ?
+                    PlayMusic.setUrl(PlayMusic.nowPlayMusic.getPlayerUrl() == null ?
                             api.getPlayUrl(PlayMusic.nowPlayMusic.getID()) :
-                            PlayMusic.nowPlayMusic.getPlayerUrl();
+                            PlayMusic.nowPlayMusic.getPlayerUrl());
                     if (PlayMusic.url == null) {
                         String data = AllMusic.getMessage().musicPlay.emptyCanPlay;
                         AllMusic.side.broadcastInTask(data.replace(ARG.musicId, PlayMusic.nowPlayMusic.getID()));
-                        PlayMusic.nowPlayMusic = null;
+                        PlayMusic.setNowPlayMusic(null);
                         continue;
                     }
 
                     if (PlayMusic.nowPlayMusic.getPlayerUrl() == null)
-                        PlayMusic.lyric = api.getLyric(PlayMusic.nowPlayMusic.getID());
+                        PlayMusic.setLyric(api.getLyric(PlayMusic.nowPlayMusic.getID()));
                     else
-                        PlayMusic.lyric = new LyricSave();
+                        PlayMusic.setLyric(new LyricSave());
 
                     if (PlayMusic.nowPlayMusic.getLength() != 0) {
-                        PlayMusic.musicAllTime = PlayMusic.musicLessTime = PlayMusic.nowPlayMusic.getLength();
+                        PlayMusic.setMusicAllTime(PlayMusic.nowPlayMusic.getLength());
+                        PlayMusic.setMusicLessTime(PlayMusic.nowPlayMusic.getLength());
                         isPlay = true;
                         AllMusic.side.sendMusic(PlayMusic.url);
                         if (!AllMusic.getConfig().mutePlayMessage) {
@@ -262,8 +259,8 @@ public class PlayRuntime {
                         }
                         if (PlayMusic.nowPlayMusic.isTrial()) {
                             AllMusic.side.broadcastInTask(AllMusic.getMessage().musicPlay.trail);
-                            PlayMusic.musicLessTime = PlayMusic.nowPlayMusic.getTrialInfo().end;
-                            PlayMusic.musicNowTime = PlayMusic.nowPlayMusic.getTrialInfo().start;
+                            PlayMusic.setMusicLessTime(PlayMusic.nowPlayMusic.getTrialInfo().end);
+                            PlayMusic.setMusicNowTime(PlayMusic.nowPlayMusic.getTrialInfo().start);
                         }
 
                         AllMusic.side.updateInfo();
@@ -272,7 +269,7 @@ public class PlayRuntime {
                             HudUtils.sendHudNowData();
                             HudUtils.sendHudTime();
                             if (PlayMusic.nowPlayMusic == null || !AllMusic.side.needPlay(PlayMusic.nowPlayMusic.isList())) {
-                                PlayMusic.musicLessTime = 10;
+                                PlayMusic.setMusicLessTime(10);
                             }
                             Thread.sleep(AllMusic.getConfig().sendDelay);
                         }

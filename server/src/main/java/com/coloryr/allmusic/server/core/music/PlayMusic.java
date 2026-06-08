@@ -3,6 +3,7 @@ package com.coloryr.allmusic.server.core.music;
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.IMusicApi;
 import com.coloryr.allmusic.server.core.music.playback.PlaybackQueue;
+import com.coloryr.allmusic.server.core.music.playback.PlaybackState;
 import com.coloryr.allmusic.server.core.music.playback.PushService;
 import com.coloryr.allmusic.server.core.music.playback.VoteService;
 import com.coloryr.allmusic.server.core.objs.config.LimitObj;
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class PlayMusic {
     private static final Object DEEP_LOCK = new Object();
     private static final PlaybackQueue playbackQueue = new PlaybackQueue();
+    private static final PlaybackState playbackState = new PlaybackState();
     private static final VoteService voteService = new VoteService();
     private static final PushService pushService = new PushService();
 
@@ -67,6 +69,63 @@ public class PlayMusic {
      */
     public static void start() {
         new Thread(PlayMusic::task, "allmusic_task").start();
+    }
+
+    public static void clearPlaybackState() {
+        playbackState.clear();
+        musicNowTime = playbackState.getMusicNowTime();
+        musicAllTime = playbackState.getMusicAllTime();
+        musicLessTime = playbackState.getMusicLessTime();
+        lyric = playbackState.getLyric();
+        nowPlayMusic = playbackState.getNowPlayMusic();
+        url = playbackState.getUrl();
+    }
+
+    public static void setNowPlayMusic(SongInfoObj music) {
+        playbackState.setNowPlayMusic(music);
+        nowPlayMusic = music;
+    }
+
+    public static void setLyric(LyricSave value) {
+        playbackState.setLyric(value);
+        lyric = value;
+    }
+
+    public static void setUrl(String value) {
+        playbackState.setUrl(value);
+        url = value;
+    }
+
+    public static void setMusicAllTime(long value) {
+        playbackState.setMusicAllTime(value);
+        musicAllTime = value;
+    }
+
+    public static void setMusicLessTime(long value) {
+        playbackState.setMusicLessTime(value);
+        musicLessTime = value;
+    }
+
+    public static void setMusicNowTime(long value) {
+        playbackState.setMusicNowTime(value);
+        musicNowTime = value;
+    }
+
+    public static void addMusicNowTime(long value) {
+        setMusicNowTime(musicNowTime + value);
+    }
+
+    public static void addMusicLessTime(long value) {
+        setMusicLessTime(musicLessTime + value);
+    }
+
+    public static void setError(int value) {
+        playbackState.setError(value);
+        error = value;
+    }
+
+    public static void addError() {
+        setError(error + 1);
     }
 
     /**
@@ -255,15 +314,15 @@ public class PlayMusic {
             }
             if (AllMusic.getConfig().playListSwitch
                     && (PlayMusic.nowPlayMusic != null && PlayMusic.nowPlayMusic.isList())) {
-                PlayMusic.musicLessTime = 10;
+                PlayMusic.setMusicLessTime(10);
                 if (!isList) {
                     AllMusic.side.broadcastInTask(AllMusic.getMessage().musicPlay.switchMusic);
                 }
             }
-            error = 0;
+            setError(0);
         } catch (Exception e) {
             if (isList) {
-                error++;
+                addError();
             }
             AllMusic.log.data("<light_purple>[AllMusic3]<red>歌曲信息解析错误");
             e.printStackTrace();
