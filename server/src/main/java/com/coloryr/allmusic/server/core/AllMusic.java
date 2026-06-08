@@ -1,10 +1,8 @@
 package com.coloryr.allmusic.server.core;
 
+import com.coloryr.allmusic.server.core.lifecycle.AllMusicRuntimeLifecycle;
 import com.coloryr.allmusic.server.core.music.MusicApiRegistry;
-import com.coloryr.allmusic.server.core.music.MusicHttpClient;
-import com.coloryr.allmusic.server.core.music.MusicSearch;
 import com.coloryr.allmusic.server.core.music.PlayMusic;
-import com.coloryr.allmusic.server.core.music.PlayRuntime;
 import com.coloryr.allmusic.server.core.objs.CookieObj;
 import com.coloryr.allmusic.server.core.objs.config.ConfigObj;
 import com.coloryr.allmusic.server.core.objs.message.MessageObj;
@@ -38,6 +36,7 @@ public class AllMusic {
     public static final Random random = new Random();
 
     private static final MusicApiRegistry musicApiRegistry = new MusicApiRegistry();
+    private static final AllMusicRuntimeLifecycle runtimeLifecycle = new AllMusicRuntimeLifecycle();
     public static final Map<String, IMusicApi> MUSIC_APIS = musicApiRegistry.getApis();
 
     public static void registerMusicApi(IMusicApi api, String... aliases) {
@@ -292,13 +291,8 @@ public class AllMusic {
     public static void start() {
         isRun = true;
 
-        MusicHttpClient.init();
+        runtimeLifecycle.startRuntime();
         musicApiRegistry.clear();
-
-        PlayMusic.start();
-        PlayRuntime.start();
-        MusicSearch.start();
-        SaveTask.start();
 
         List<IMusicApi> list = MusicApiLoader.loadFromDirectory(apis);
         for (IMusicApi item : list) {
@@ -318,9 +312,7 @@ public class AllMusic {
      */
     public static void stop() {
         isRun = false;
-        PlayRuntime.stop();
-        SaveTask.stop();
-        side.sendStop();
+        runtimeLifecycle.stopRuntime(side);
         log.data("<light_purple>[AllMusic3]<dark_green><yellow>已停止，感谢使用");
     }
 
