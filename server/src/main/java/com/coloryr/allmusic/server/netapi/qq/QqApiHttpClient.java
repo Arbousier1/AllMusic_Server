@@ -2,6 +2,7 @@ package com.coloryr.allmusic.server.netapi.qq;
 
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.music.MusicHttpClient;
+import com.coloryr.allmusic.server.core.music.http.HttpTextHelper;
 import com.coloryr.allmusic.server.core.objs.HttpResObj;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.cookie.CookieStore;
@@ -20,6 +21,7 @@ import java.util.Map;
 public final class QqApiHttpClient {
     private static final String DEFAULT_COOKIE = "pgv_pvi=22038528; pgv_si=s3156287488; pgv_pvid=5535248600; yplayer_open=1; ts_last=y.qq.com/portal/player.html; ts_uid=4847550686; yq_index=0; qqmusic_fromtag=66; player_exist=1";
     private static final String DEFAULT_USER_AGENT = "QQ%E9%9F%B3%E4%B9%90/54409 CFNetwork/901.1 Darwin/17.6.0 (x86_64)";
+    private static final HttpTextHelper TEXT_HELPER = new HttpTextHelper();
 
     private QqApiHttpClient() {
     }
@@ -94,6 +96,6 @@ public final class QqApiHttpClient {
     }
 
     private static boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
+        return TEXT_HELPER.isBlank(value);
     }
 }

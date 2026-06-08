@@ -1,6 +1,7 @@
 package com.coloryr.allmusic.server.core.music;
 
 import com.coloryr.allmusic.server.core.AllMusic;
+import com.coloryr.allmusic.server.core.music.http.CookieDomainMatcher;
 import com.coloryr.allmusic.server.core.objs.CookieObj;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -28,6 +29,7 @@ public class MusicHttpClient {
     private static final int CONNECT_TIMEOUT = 5;
     private static final int READ_TIMEOUT = 7;
     private static final long PERSISTENT_COOKIE_SENTINEL_MILLIS = 253402300799000L;
+    private static final CookieDomainMatcher COOKIE_DOMAIN_MATCHER = new CookieDomainMatcher();
     public static CloseableHttpClient client;
 
     public static void init() {
@@ -183,15 +185,7 @@ public class MusicHttpClient {
     }
 
     private static boolean matchDomain(String host, String domain) {
-        if (host == null || domain == null || domain.isEmpty()) {
-            return false;
-        }
-
-        String domain1 = domain.toLowerCase(Locale.ROOT);
-        while (domain1.startsWith(".")) {
-            domain1 = domain1.substring(1);
-        }
-        return host.equals(domain1) || host.endsWith("." + domain1);
+        return COOKIE_DOMAIN_MATCHER.match(host, domain);
     }
 
     private static CookieObj findCookie(List<CookieObj> list, String domain, String path, String name) {
