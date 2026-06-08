@@ -1,5 +1,6 @@
 package com.coloryr.allmusic.server.core;
 
+import com.coloryr.allmusic.server.core.music.MusicApiRegistry;
 import com.coloryr.allmusic.server.core.music.MusicHttpClient;
 import com.coloryr.allmusic.server.core.music.MusicSearch;
 import com.coloryr.allmusic.server.core.music.PlayMusic;
@@ -28,7 +29,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AllMusic {
     public static final Gson gson = new GsonBuilder()
@@ -37,121 +37,40 @@ public class AllMusic {
             .create();
     public static final Random random = new Random();
 
-    public static final Map<String, IMusicApi> MUSIC_APIS = new ConcurrentHashMap<>();
-    private static final Map<String, IMusicApi> PRIMARY_MUSIC_APIS = Collections.synchronizedMap(new LinkedHashMap<String, IMusicApi>());
-    private static final Map<String, LinkedHashMap<String, IMusicApi>> MUSIC_API_GROUPS = Collections.synchronizedMap(new LinkedHashMap<String, LinkedHashMap<String, IMusicApi>>());
-
-    private static String normalizeApiKey(String api) {
-        if (api == null) {
-            return null;
-        }
-        return api.trim().toLowerCase(Locale.ROOT);
-    }
+    private static final MusicApiRegistry musicApiRegistry = new MusicApiRegistry();
+    public static final Map<String, IMusicApi> MUSIC_APIS = musicApiRegistry.getApis();
 
     public static void registerMusicApi(IMusicApi api, String... aliases) {
-        if (api == null) {
-            return;
-        }
-
-        String id = normalizeApiKey(api.getId());
-        if (id != null && !id.isEmpty()) {
-            MUSIC_APIS.put(id, api);
-            PRIMARY_MUSIC_APIS.put(id, api);
-            addMusicApiGroup(id, api);
-            addMusicApiGroup(getMusicApiGroup(id), api);
-        }
-
-        for (String alias : aliases) {
-            String key = normalizeApiKey(alias);
-            if (key != null && !key.isEmpty()) {
-                MUSIC_APIS.put(key, api);
-                addMusicApiGroup(key, api);
-                addMusicApiGroup(getMusicApiGroup(key), api);
-            }
-        }
-    }
-
-    private static void addMusicApiGroup(String group, IMusicApi api) {
-        String key = normalizeApiKey(group);
-        String id = normalizeApiKey(api == null ? null : api.getId());
-        if (key == null || key.isEmpty() || id == null || id.isEmpty()) {
-            return;
-        }
-        LinkedHashMap<String, IMusicApi> apis = MUSIC_API_GROUPS.get(key);
-        if (apis == null) {
-            apis = new LinkedHashMap<String, IMusicApi>();
-            MUSIC_API_GROUPS.put(key, apis);
-        }
-        apis.put(id, api);
-    }
-
-    private static String getMusicApiGroup(String api) {
-        String key = normalizeApiKey(api);
-        if (key == null || key.isEmpty()) {
-            return null;
-        }
-        if (key.contains("netease") || key.contains("wangyi") || key.contains("163") || key.contains("netapi")) {
-            return "netease";
-        }
-        if (key.contains("qq") || key.contains("tencent")) {
-            return "qq";
-        }
-        if (key.contains("kugou")) {
-            return "kugou";
-        }
-        if (key.contains("kuwo")) {
-            return "kuwo";
-        }
-        if (key.contains("baidu") || key.contains("taihe") || key.contains("qianqian")) {
-            return "baidu";
-        }
-        return key;
+        musicApiRegistry.register(api, aliases);
     }
 
     public static IMusicApi getMusicApi(String api) {
-        String key = normalizeApiKey(api);
-        if (key == null || key.isEmpty()) {
-            return null;
-        }
-        return MUSIC_APIS.get(key);
+        return musicApiRegistry.get(api);
     }
 
     public static Collection<IMusicApi> getMusicApis(String api) {
-        String key = normalizeApiKey(api);
-        if (key == null || key.isEmpty() || "all".equalsIgnoreCase(key)) {
-            return getRegisteredMusicApis();
-        }
-        LinkedHashMap<String, IMusicApi> group = MUSIC_API_GROUPS.get(key);
-        if (group != null && !group.isEmpty()) {
-            return Collections.unmodifiableCollection(new ArrayList<IMusicApi>(group.values()));
-        }
-        IMusicApi item = MUSIC_APIS.get(key);
-        if (item == null) {
-            return Collections.emptyList();
-        }
-        return Collections.singletonList(item);
+        return musicApiRegistry.getMany(api);
     }
 
     public static boolean hasMusicApis(String api) {
-        return !getMusicApis(api).isEmpty();
+        return musicApiRegistry.has(api);
     }
 
     public static String getMusicApiList() {
-        return String.join(", ", new TreeSet<>(MUSIC_APIS.keySet()));
+        return musicApiRegistry.getApiList();
     }
 
     public static Collection<IMusicApi> getRegisteredMusicApis() {
-        return Collections.unmodifiableCollection(new ArrayList<IMusicApi>(PRIMARY_MUSIC_APIS.values()));
+        return musicApiRegistry.getRegisteredApis();
     }
 
     public static boolean hasMusicApi() {
-        return !PRIMARY_MUSIC_APIS.isEmpty();
+        return musicApiRegistry.hasRegisteredApis();
     }
 
     public static String getUnknownApiMessage() {
         return getMessage().musicPlay.error2 + " 可用: " + getMusicApiList();
     }
-
     /**
      * 客户端插件信道名
      */
@@ -374,9 +293,7 @@ public class AllMusic {
         isRun = true;
 
         MusicHttpClient.init();
-        MUSIC_APIS.clear();
-        PRIMARY_MUSIC_APIS.clear();
-        MUSIC_API_GROUPS.clear();
+        musicApiRegistry.clear();
 
         PlayMusic.start();
         PlayRuntime.start();
