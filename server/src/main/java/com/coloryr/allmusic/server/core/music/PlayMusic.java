@@ -2,6 +2,7 @@ package com.coloryr.allmusic.server.core.music;
 
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.IMusicApi;
+import com.coloryr.allmusic.server.core.music.playback.PlaybackQueue;
 import com.coloryr.allmusic.server.core.objs.config.LimitObj;
 import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.MusicObj;
@@ -15,13 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PlayMusic {
-    private static final Object PLAY_LIST_LOCK = new Object();
     private static final Object DEEP_LOCK = new Object();
+    private static final PlaybackQueue playbackQueue = new PlaybackQueue();
 
-    /**
-     * 播放列表
-     */
-    private static final List<SongInfoObj> playList = new ArrayList<>();
     private static final Queue<PlayerAddMusicObj> tasks = new ConcurrentLinkedQueue<>();
     private static final Queue<MusicObj> deep = new ConcurrentLinkedQueue<>();
     /**
@@ -236,7 +233,7 @@ public class PlayMusic {
         nowPlayPlayer.clear();
         votePlayer.clear();
         pushPlayer.clear();
-        playList.clear();
+        playbackQueue.clear();
         clearVote();
         clearPush();
 
@@ -276,9 +273,7 @@ public class PlayMusic {
                 }
                 return;
             }
-            synchronized (PLAY_LIST_LOCK) {
-                playList.add(info);
-            }
+            playbackQueue.add(info);
             if (!AllMusic.getConfig().muteAddMessage) {
                 if (AllMusic.getConfig().showInBar) {
                     String data = AllMusic.getMessage().musicPlay.addMusic
@@ -320,10 +315,7 @@ public class PlayMusic {
      */
     public static void pushMusic() {
         SongInfoObj obj = push;
-        synchronized (PLAY_LIST_LOCK) {
-            playList.remove(obj);
-            playList.add(0, obj);
-        }
+        playbackQueue.moveToFirst(obj);
     }
 
     /**
@@ -332,9 +324,7 @@ public class PlayMusic {
      * @return 长度
      */
     public static int getListSize() {
-        synchronized (PLAY_LIST_LOCK) {
-            return playList.size();
-        }
+        return playbackQueue.getListSize();
     }
 
     /**
@@ -343,18 +333,14 @@ public class PlayMusic {
      * @return 播放列表
      */
     public static List<SongInfoObj> getList() {
-        synchronized (PLAY_LIST_LOCK) {
-            return new ArrayList<>(playList);
-        }
+        return playbackQueue.getList();
     }
 
     /**
      * 清理播放列表
      */
     public static void clear() {
-        synchronized (PLAY_LIST_LOCK) {
-            playList.clear();
-        }
+        playbackQueue.clear();
     }
 
     /**
@@ -364,9 +350,7 @@ public class PlayMusic {
      * @return 结果
      */
     public static SongInfoObj remove(int index) {
-        synchronized (PLAY_LIST_LOCK) {
-            return playList.remove(index);
-        }
+        return playbackQueue.remove(index);
     }
 
     /**
@@ -375,9 +359,7 @@ public class PlayMusic {
      * @param index
      */
     public static void remove(SongInfoObj index) {
-        synchronized (PLAY_LIST_LOCK) {
-            playList.remove(index);
-        }
+        playbackQueue.remove(index);
     }
 
     /**
@@ -386,26 +368,7 @@ public class PlayMusic {
      * @return 信息
      */
     public static String getAllList() {
-        List<SongInfoObj> list1 = getList();
-        StringBuilder list = new StringBuilder();
-        String a;
-
-        SongInfoObj info;
-        for (int i = 0; i < list1.size(); i++) {
-            info = list1.get(i);
-            a = AllMusic.getMessage().musicPlay.listMusic.item;
-            a = a.replace(ARG.index, String.valueOf(i + 1))
-                    .replace(ARG.musicName, info.getName())
-                    .replace(ARG.musicAuthor, info.getAuthor())
-                    .replace(ARG.musicAl, info.getAl())
-                    .replace(ARG.musicAlia, info.getAlia())
-                    .replace(ARG.player, info.getCall());
-            list.append(a).append("\n");
-        }
-        String temp = list.toString();
-        if (temp.isEmpty())
-            return "";
-        return temp.substring(0, temp.length() - 1);
+        return playbackQueue.getAllList();
     }
 
     /**
@@ -415,7 +378,7 @@ public class PlayMusic {
      * @return 结果
      */
     public static boolean haveMusic(MusicObj music) {
-        return haveMusic(music.id, music.api);
+        return playbackQueue.haveMusic(music, nowPlayMusic);
     }
 
     /**
@@ -426,17 +389,7 @@ public class PlayMusic {
      * @return 是否在列表种
      */
     public static boolean haveMusic(String id, String api) {
-        if (nowPlayMusic != null && nowPlayMusic.getID().equalsIgnoreCase(id)
-                && Objects.equals(nowPlayMusic.getApi(), api))
-            return true;
-        synchronized (PLAY_LIST_LOCK) {
-            for (SongInfoObj item : playList) {
-                if (item.getID().equalsIgnoreCase(id) && Objects.equals(item.getApi(), api)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return playbackQueue.haveMusic(id, api, nowPlayMusic);
     }
 
     /**
@@ -526,27 +479,11 @@ public class PlayMusic {
     }
 
     public static SongInfoObj findPlayerMusic(String name) {
-        List<SongInfoObj> list1 = getList();
-        for (SongInfoObj item : list1) {
-            if (name.equalsIgnoreCase(item.getCall())) {
-                return item;
-            }
-        }
-
-        return null;
+        return playbackQueue.findPlayerMusic(name);
     }
 
     public static SongInfoObj findMusicIndex(int index) {
-        List<SongInfoObj> list1 = getList();
-        index--;
-        if (index <= 0) {
-            return null;
-        }
-        if (list1.size() <= index) {
-            return null;
-        }
-
-        return list1.get(index);
+        return playbackQueue.findMusicIndex(index);
     }
 
     /**
