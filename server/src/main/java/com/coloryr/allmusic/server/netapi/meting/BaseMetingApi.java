@@ -5,6 +5,7 @@ import com.coloryr.allmusic.server.core.IMusicApi;
 import com.coloryr.allmusic.server.core.music.LyricSave;
 import com.coloryr.allmusic.server.core.music.provider.ProviderPlaylistImporter;
 import com.coloryr.allmusic.server.core.music.provider.ProviderSearchPageBuilder;
+import com.coloryr.allmusic.server.core.music.provider.ProviderTextHelper;
 import com.coloryr.allmusic.server.core.objs.SearchMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.LyricItemObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
@@ -31,6 +32,7 @@ public abstract class BaseMetingApi implements IMusicApi {
     private static final Pattern NUMBER_ID = Pattern.compile("(\\d+)");
     protected final ProviderPlaylistImporter playlistImporter = new ProviderPlaylistImporter();
     private final ProviderSearchPageBuilder searchPageBuilder = new ProviderSearchPageBuilder();
+    private final ProviderTextHelper textHelper = new ProviderTextHelper();
     protected volatile boolean isUpdate;
     private final String id;
 
@@ -264,7 +266,7 @@ public abstract class BaseMetingApi implements IMusicApi {
     }
 
     protected String defaultIfBlank(String value, String def) {
-        return isBlank(value) ? def : value;
+        return textHelper.defaultIfBlank(value, def);
     }
 
     protected long secondsToMillis(long value) {
@@ -286,7 +288,7 @@ public abstract class BaseMetingApi implements IMusicApi {
     }
 
     protected boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
+        return textHelper.isBlank(value);
     }
 
     protected String md5(String value) {
