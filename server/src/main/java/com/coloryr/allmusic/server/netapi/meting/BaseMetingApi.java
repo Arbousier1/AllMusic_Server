@@ -3,6 +3,7 @@ package com.coloryr.allmusic.server.netapi.meting;
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.IMusicApi;
 import com.coloryr.allmusic.server.core.music.LyricSave;
+import com.coloryr.allmusic.server.core.music.provider.ProviderPlaylistImporter;
 import com.coloryr.allmusic.server.core.objs.SearchMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.LyricItemObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
 public abstract class BaseMetingApi implements IMusicApi {
     private static final Pattern LRC_TIME = Pattern.compile("\\[(\\d+):(\\d+)(?:\\.(\\d{1,3}))?]");
     private static final Pattern NUMBER_ID = Pattern.compile("(\\d+)");
+    protected final ProviderPlaylistImporter playlistImporter = new ProviderPlaylistImporter();
     protected volatile boolean isUpdate;
     private final String id;
 

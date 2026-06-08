@@ -4,13 +4,12 @@ import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.IMusicApi;
 import com.coloryr.allmusic.server.core.music.LyricSave;
 import com.coloryr.allmusic.server.core.music.MusicHttpClient;
+import com.coloryr.allmusic.server.core.music.provider.ProviderPlaylistImporter;
 import com.coloryr.allmusic.server.core.objs.HttpResObj;
 import com.coloryr.allmusic.server.core.objs.SearchMusicObj;
-import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.LyricItemObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 import com.coloryr.allmusic.server.core.objs.music.SongInfoObj;
-import com.coloryr.allmusic.server.core.saves.MusicListSave;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -42,6 +41,7 @@ public class QqMusicApiMain implements IMusicApi {
     private static final Pattern JSONP_PATTERN = Pattern.compile("^[^(]+\\((.*)\\)\\s*;?\\s*$", Pattern.DOTALL);
     private static final Pattern LRC_TIME = Pattern.compile("\\[(\\d+):(\\d+)(?:\\.(\\d{1,3}))?]");
     private static final Random RANDOM = new Random();
+    private final ProviderPlaylistImporter playlistImporter = new ProviderPlaylistImporter();
 
     private volatile boolean isUpdate;
 
@@ -152,13 +152,8 @@ public class QqMusicApiMain implements IMusicApi {
                         return;
                     }
 
-                    MusicListSave.addIdleList(ids, getId());
                     String name = firstString(root, "cdlist.0.dissname");
-                    if (isBlank(name)) {
-                        name = id;
-                    }
-                    AllMusic.side.sendMessageTask(sender,
-                            AllMusic.getMessage().musicPlay.listMusic.get.replace(ARG.name, name));
+                    playlistImporter.importIdleList(ids, getId(), sender, isBlank(name) ? id : name);
                 } finally {
                     isUpdate = false;
                 }

@@ -4,10 +4,8 @@ import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.music.LyricSave;
 import com.coloryr.allmusic.server.core.objs.HttpResObj;
 import com.coloryr.allmusic.server.core.objs.SearchMusicObj;
-import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 import com.coloryr.allmusic.server.core.objs.music.SongInfoObj;
-import com.coloryr.allmusic.server.core.saves.MusicListSave;
 import com.coloryr.allmusic.server.netapi.meting.BaseMetingApi;
 import com.coloryr.allmusic.server.netapi.meting.MetingHttpClient;
 import com.google.gson.JsonArray;
@@ -116,10 +114,8 @@ public class KuwoMusicApiMain extends BaseMetingApi {
                     if (ids.isEmpty()) {
                         return;
                     }
-                    MusicListSave.addIdleList(ids, getId());
                     String name = firstString(root, "data.name");
-                    AllMusic.side.sendMessageTask(sender,
-                            AllMusic.getMessage().musicPlay.listMusic.get.replace(ARG.name, defaultIfBlank(name, id)));
+                    playlistImporter.importIdleList(ids, getId(), sender, defaultIfBlank(name, id));
                 } finally {
                     isUpdate = false;
                 }
