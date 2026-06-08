@@ -9,8 +9,16 @@ fun includeClient(name: String) {
     includeAt(":client:$name", "client/client/$name")
 }
 
+fun includeAtIfExists(path: String, dir: String, fallbackDir: String? = null) {
+    if (file(dir).isDirectory) {
+        includeAt(path, dir)
+    } else if (fallbackDir != null && file(fallbackDir).isDirectory) {
+        includeAt(path, fallbackDir)
+    }
+}
+
 includeAt(":codec", "client/codec")
-includeAt(":codec:buffercodec", "client/codec/buffercodec")
+includeAtIfExists(":codec:buffercodec", "client/codec/buffercodec", "gradle/fallback-buffercodec")
 includeAt(":client", "client/client")
 includeClient("fabric_1_16_5")
 includeClient("fabric_1_20_1")
