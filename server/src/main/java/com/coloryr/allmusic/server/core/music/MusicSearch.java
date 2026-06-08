@@ -3,8 +3,8 @@ package com.coloryr.allmusic.server.core.music;
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.music.search.SearchAggregator;
 import com.coloryr.allmusic.server.core.music.search.SearchPresenter;
+import com.coloryr.allmusic.server.core.music.search.SearchService;
 import com.coloryr.allmusic.server.core.music.search.SearchSessionStore;
-import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.PlayerAddMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
 
@@ -16,6 +16,7 @@ public class MusicSearch {
     private static final SearchSessionStore searchSessionStore = new SearchSessionStore();
     private static final SearchPresenter searchPresenter = new SearchPresenter();
     private static final SearchAggregator searchAggregator = new SearchAggregator();
+    private static final SearchService searchService = new SearchService(searchSessionStore, searchPresenter, searchAggregator);
 
     private static final Queue<PlayerAddMusicObj> tasks = new ConcurrentLinkedQueue<>();
 
@@ -25,15 +26,7 @@ public class MusicSearch {
             try {
                 PlayerAddMusicObj obj = tasks.poll();
                 if (obj != null) {
-                    SearchPageObj search = searchApis(obj);
-                    if (search == null)
-                        AllMusic.side.sendMessageTask(obj.sender, AllMusic.getMessage().search
-                                .cantSearch.replace(ARG.name, obj.isDefault ? obj.args[0] : obj.args[1]));
-                    else {
-                        AllMusic.side.sendMessageTask(obj.sender, AllMusic.getMessage().search.res);
-                        addSearch(obj.name, search);
-                        AllMusic.side.runTask(() -> showSearch(obj.sender, search));
-                    }
+                    searchService.handleSearch(obj);
                 }
                 Thread.sleep(100);
             } catch (Exception e) {
@@ -41,7 +34,7 @@ public class MusicSearch {
                 e.printStackTrace();
             }
         }
-        searchSessionStore.clear();
+        searchService.clear();
         tasks.clear();
         AllMusic.log.data("歌曲搜索线程停止");
     }
@@ -54,10 +47,6 @@ public class MusicSearch {
         tasks.add(obj);
     }
 
-    private static SearchPageObj searchApis(PlayerAddMusicObj obj) {
-        return searchAggregator.searchApis(obj);
-    }
-
     /**
      * 展示搜歌结果
      *
@@ -65,7 +54,7 @@ public class MusicSearch {
      * @param search 搜歌结果
      */
     public static void showSearch(Object sender, SearchPageObj search) {
-        searchPresenter.showSearch(sender, search);
+        searchService.showSearch(sender, search);
     }
 
     /**
@@ -75,7 +64,7 @@ public class MusicSearch {
      * @param page   结果
      */
     public static void addSearch(String player, SearchPageObj page) {
-        searchSessionStore.addSearch(player, page);
+        searchService.addSearch(player, page);
     }
 
     /**
@@ -85,7 +74,7 @@ public class MusicSearch {
      * @return 结果
      */
     public static SearchPageObj getSearch(String player) {
-        return searchSessionStore.getSearch(player);
+        return searchService.getSearch(player);
     }
 
     /**
@@ -94,6 +83,6 @@ public class MusicSearch {
      * @param player 用户名
      */
     public static void removeSearch(String player) {
-        searchSessionStore.removeSearch(player);
+        searchService.removeSearch(player);
     }
 }
