@@ -1,12 +1,12 @@
 package com.coloryr.allmusic.server;
 
 import com.coloryr.allmusic.server.core.AllMusic;
+import com.coloryr.allmusic.server.core.message.PluginMessageBridge;
 import com.coloryr.allmusic.server.core.music.PlayMusic;
 import com.coloryr.allmusic.server.core.music.TopLyricSave;
 import com.coloryr.allmusic.server.core.objs.music.TopSongInfoObj;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -34,20 +34,20 @@ public class PluginMessage implements PluginMessageListener {
     }
 
     private static void clear() {
-        update = false;
+        PluginMessageBridge.clear();
+        update = PluginMessageBridge.update;
     }
 
     public static void startUpdate() {
         Player player = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
         if (player == null)
             return;
-        ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF("allmusic");
-        player.sendPluginMessage(AllMusicFolia.plugin, AllMusic.channelBC, out.toByteArray());
+        player.sendPluginMessage(AllMusicFolia.plugin, AllMusic.channelBC, PluginMessageBridge.createFoliaStartUpdatePacket());
     }
 
     public void stop() {
         service.shutdownNow();
+        clear();
     }
 
     @Override
@@ -57,7 +57,8 @@ public class PluginMessage implements PluginMessageListener {
         }
         ByteArrayDataInput in = ByteStreams.newDataInput(message);
         int type = in.readInt();
-        update = true;
+        PluginMessageBridge.markUpdated();
+        update = PluginMessageBridge.update;
         switch (type) {
             case 0:
                 info.setName(in.readUTF());
@@ -75,10 +76,12 @@ public class PluginMessage implements PluginMessageListener {
                 info.setCall(in.readUTF());
                 break;
             case 5:
-                size = in.readInt();
+                PluginMessageBridge.setSize(in.readInt());
+                size = PluginMessageBridge.size;
                 break;
             case 6:
-                allList = in.readUTF();
+                PluginMessageBridge.setAllList(in.readUTF());
+                allList = PluginMessageBridge.allList;
                 break;
             case 7:
                 lyric.setLyric(in.readUTF());
