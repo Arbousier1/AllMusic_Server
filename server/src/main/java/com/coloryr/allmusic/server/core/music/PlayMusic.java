@@ -3,6 +3,7 @@ package com.coloryr.allmusic.server.core.music;
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.IMusicApi;
 import com.coloryr.allmusic.server.core.music.playback.PlaybackQueue;
+import com.coloryr.allmusic.server.core.music.playback.PushService;
 import com.coloryr.allmusic.server.core.music.playback.VoteService;
 import com.coloryr.allmusic.server.core.objs.config.LimitObj;
 import com.coloryr.allmusic.server.core.objs.message.ARG;
@@ -20,6 +21,7 @@ public class PlayMusic {
     private static final Object DEEP_LOCK = new Object();
     private static final PlaybackQueue playbackQueue = new PlaybackQueue();
     private static final VoteService voteService = new VoteService();
+    private static final PushService pushService = new PushService();
 
     private static final Queue<PlayerAddMusicObj> tasks = new ConcurrentLinkedQueue<>();
     private static final Queue<MusicObj> deep = new ConcurrentLinkedQueue<>();
@@ -27,10 +29,6 @@ public class PlayMusic {
      * 正在播放的玩家
      */
     private static final Set<String> nowPlayPlayer = new HashSet<>();
-    /**
-     * 插歌投票的玩家
-     */
-    private static final Set<String> pushPlayer = ConcurrentHashMap.newKeySet();
     /**
      * 总歌曲长度
      */
@@ -59,18 +57,6 @@ public class PlayMusic {
      * 错误次数
      */
     public static volatile int error;
-    /**
-     * 插歌投票时间
-     */
-    private static volatile int pushTime = 0;
-    /**
-     * 插歌发起人
-     */
-    private static volatile String pushSender;
-    /**
-     * 插歌目标
-     */
-    private static volatile SongInfoObj push;
     /**
      * 空闲列表取出的歌曲序号
      */
@@ -102,20 +88,15 @@ public class PlayMusic {
      * @param player 用户名
      */
     public static void addPush(String player) {
-        player = player.toLowerCase();
-        pushPlayer.add(player);
+        pushService.addPush(player);
     }
 
     public static void startPush(String player, SongInfoObj music) {
-        player = player.toLowerCase();
-        push = music;
-        pushSender = player;
-        pushPlayer.add(player);
-        pushTime = AllMusic.getConfig().voteTime;
+        pushService.startPush(player, music);
     }
 
     public static void pushTick() {
-        pushTime--;
+        pushService.pushTick();
     }
 
     public static void voteTick() {
@@ -123,15 +104,15 @@ public class PlayMusic {
     }
 
     public static SongInfoObj getPush() {
-        return push;
+        return pushService.getPush();
     }
 
     public static int getPushTime() {
-        return pushTime;
+        return pushService.getPushTime();
     }
 
     public static String getPushSender() {
-        return pushSender;
+        return pushService.getPushSender();
     }
 
     public static int getVoteTime() {
@@ -152,7 +133,7 @@ public class PlayMusic {
     }
 
     public static int getPushCount() {
-        return pushPlayer.size();
+        return pushService.getPushCount();
     }
 
     /**
@@ -166,10 +147,7 @@ public class PlayMusic {
      * 清空插歌
      */
     public static void clearPush() {
-        pushTime = -1;
-        push = null;
-        pushSender = null;
-        pushPlayer.clear();
+        pushService.clearPush();
     }
 
     /**
@@ -183,8 +161,7 @@ public class PlayMusic {
     }
 
     public static boolean containPush(String player) {
-        player = player.toLowerCase();
-        return pushPlayer.contains(player);
+        return pushService.containPush(player);
     }
 
     /**
@@ -215,7 +192,7 @@ public class PlayMusic {
         }
         nowPlayPlayer.clear();
         voteService.clearVote();
-        pushPlayer.clear();
+        pushService.clearPush();
         playbackQueue.clear();
         clearVote();
         clearPush();
@@ -297,7 +274,7 @@ public class PlayMusic {
      * 将歌曲移动到队列头
      */
     public static void pushMusic() {
-        SongInfoObj obj = push;
+        SongInfoObj obj = pushService.getPush();
         playbackQueue.moveToFirst(obj);
     }
 
