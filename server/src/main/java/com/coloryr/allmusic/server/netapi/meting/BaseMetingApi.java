@@ -4,6 +4,7 @@ import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.IMusicApi;
 import com.coloryr.allmusic.server.core.music.LyricSave;
 import com.coloryr.allmusic.server.core.music.provider.ProviderPlaylistImporter;
+import com.coloryr.allmusic.server.core.music.provider.ProviderSearchPageBuilder;
 import com.coloryr.allmusic.server.core.objs.SearchMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.LyricItemObj;
 import com.coloryr.allmusic.server.core.objs.music.SearchPageObj;
@@ -29,6 +30,7 @@ public abstract class BaseMetingApi implements IMusicApi {
     private static final Pattern LRC_TIME = Pattern.compile("\\[(\\d+):(\\d+)(?:\\.(\\d{1,3}))?]");
     private static final Pattern NUMBER_ID = Pattern.compile("(\\d+)");
     protected final ProviderPlaylistImporter playlistImporter = new ProviderPlaylistImporter();
+    private final ProviderSearchPageBuilder searchPageBuilder = new ProviderSearchPageBuilder();
     protected volatile boolean isUpdate;
     private final String id;
 
@@ -47,8 +49,7 @@ public abstract class BaseMetingApi implements IMusicApi {
     }
 
     protected SearchPageObj buildSearchPage(List<SearchMusicObj> items) {
-        return items == null || items.isEmpty() ? null
-                : new SearchPageObj(items, Math.max(1, (items.size() + 9) / 10), getId());
+        return searchPageBuilder.build(items, getId());
     }
 
     protected String joinArgs(String[] args, int start) {

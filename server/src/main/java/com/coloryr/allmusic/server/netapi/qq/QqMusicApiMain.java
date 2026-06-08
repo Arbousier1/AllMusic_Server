@@ -5,6 +5,7 @@ import com.coloryr.allmusic.server.core.IMusicApi;
 import com.coloryr.allmusic.server.core.music.LyricSave;
 import com.coloryr.allmusic.server.core.music.MusicHttpClient;
 import com.coloryr.allmusic.server.core.music.provider.ProviderPlaylistImporter;
+import com.coloryr.allmusic.server.core.music.provider.ProviderSearchPageBuilder;
 import com.coloryr.allmusic.server.core.objs.HttpResObj;
 import com.coloryr.allmusic.server.core.objs.SearchMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.LyricItemObj;
@@ -42,6 +43,7 @@ public class QqMusicApiMain implements IMusicApi {
     private static final Pattern LRC_TIME = Pattern.compile("\\[(\\d+):(\\d+)(?:\\.(\\d{1,3}))?]");
     private static final Random RANDOM = new Random();
     private final ProviderPlaylistImporter playlistImporter = new ProviderPlaylistImporter();
+    private final ProviderSearchPageBuilder searchPageBuilder = new ProviderSearchPageBuilder();
 
     private volatile boolean isUpdate;
 
@@ -120,7 +122,7 @@ public class QqMusicApiMain implements IMusicApi {
             items.add(new SearchMusicObj(songId, name, author, album == null ? "" : album));
         }
 
-        return items.isEmpty() ? null : new SearchPageObj(items, Math.max(1, (items.size() + 9) / 10), getId());
+        return searchPageBuilder.build(items, getId());
     }
 
     @Override
