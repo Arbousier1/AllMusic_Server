@@ -3,6 +3,7 @@ package com.coloryr.allmusic.server.core.music;
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.IMusicApi;
 import com.coloryr.allmusic.server.core.music.playback.PlaybackQueue;
+import com.coloryr.allmusic.server.core.music.playback.VoteService;
 import com.coloryr.allmusic.server.core.objs.config.LimitObj;
 import com.coloryr.allmusic.server.core.objs.message.ARG;
 import com.coloryr.allmusic.server.core.objs.music.MusicObj;
@@ -18,6 +19,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class PlayMusic {
     private static final Object DEEP_LOCK = new Object();
     private static final PlaybackQueue playbackQueue = new PlaybackQueue();
+    private static final VoteService voteService = new VoteService();
 
     private static final Queue<PlayerAddMusicObj> tasks = new ConcurrentLinkedQueue<>();
     private static final Queue<MusicObj> deep = new ConcurrentLinkedQueue<>();
@@ -25,10 +27,6 @@ public class PlayMusic {
      * 正在播放的玩家
      */
     private static final Set<String> nowPlayPlayer = new HashSet<>();
-    /**
-     * 切歌投票的玩家
-     */
-    private static final Set<String> votePlayer = ConcurrentHashMap.newKeySet();
     /**
      * 插歌投票的玩家
      */
@@ -62,14 +60,6 @@ public class PlayMusic {
      */
     public static volatile int error;
     /**
-     * 切歌投票时间
-     */
-    private static volatile int voteTime = 0;
-    /**
-     * 切歌发起人
-     */
-    private static volatile String voteSender;
-    /**
      * 插歌投票时间
      */
     private static volatile int pushTime = 0;
@@ -99,15 +89,11 @@ public class PlayMusic {
      * @param player 用户名
      */
     public static void addVote(String player) {
-        player = player.toLowerCase();
-        votePlayer.add(player);
+        voteService.addVote(player);
     }
 
     public static void startVote(String player) {
-        player = player.toLowerCase();
-        voteSender = player;
-        votePlayer.add(player);
-        voteTime = AllMusic.getConfig().voteTime;
+        voteService.startVote(player);
     }
 
     /**
@@ -133,7 +119,7 @@ public class PlayMusic {
     }
 
     public static void voteTick() {
-        voteTime--;
+        voteService.voteTick();
     }
 
     public static SongInfoObj getPush() {
@@ -149,11 +135,11 @@ public class PlayMusic {
     }
 
     public static int getVoteTime() {
-        return voteTime;
+        return voteService.getVoteTime();
     }
 
     public static String getVoteSender() {
-        return voteSender;
+        return voteService.getVoteSender();
     }
 
     /**
@@ -162,7 +148,7 @@ public class PlayMusic {
      * @return 数量
      */
     public static int getVoteCount() {
-        return votePlayer.size();
+        return voteService.getVoteCount();
     }
 
     public static int getPushCount() {
@@ -173,9 +159,7 @@ public class PlayMusic {
      * 清空投票
      */
     public static void clearVote() {
-        voteTime = -1;
-        voteSender = null;
-        votePlayer.clear();
+        voteService.clearVote();
     }
 
     /**
@@ -195,8 +179,7 @@ public class PlayMusic {
      * @return 结果
      */
     public static boolean containVote(String player) {
-        player = player.toLowerCase();
-        return votePlayer.contains(player);
+        return voteService.containVote(player);
     }
 
     public static boolean containPush(String player) {
@@ -231,7 +214,7 @@ public class PlayMusic {
             }
         }
         nowPlayPlayer.clear();
-        votePlayer.clear();
+        voteService.clearVote();
         pushPlayer.clear();
         playbackQueue.clear();
         clearVote();
