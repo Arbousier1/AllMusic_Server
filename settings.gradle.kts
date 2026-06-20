@@ -6,36 +6,35 @@ fun includeAt(path: String, dir: String) {
 }
 
 fun includeClient(name: String) {
-    includeAt(":client:$name", "client/client/$name")
+    includeAt(":client:$name", "client/$name")
 }
 
-fun includeAtIfExists(path: String, dir: String, fallbackDir: String? = null) {
-    if (file(dir).isDirectory) {
-        includeAt(path, dir)
-    } else if (fallbackDir != null && file(fallbackDir).isDirectory) {
-        includeAt(path, fallbackDir)
-    }
+fun includeAtIfExists(path: String, dir: String, fallbackDir: String) {
+    include(path)
+    project(path).projectDir = if (file(dir).isDirectory) file(dir) else file(fallbackDir)
 }
 
-includeAt(":codec", "client/codec")
-includeAtIfExists(":codec:buffercodec", "client/codec/buffercodec", "gradle/fallback-buffercodec")
-includeAt(":client", "client/client")
+includeAt(":codec", "codec")
+includeAtIfExists(":codec:buffercodec", "codec/buffercodec", "gradle/fallback-buffercodec")
+includeAt(":client", "client")
 includeClient("fabric_1_16_5")
 includeClient("fabric_1_20_1")
 includeClient("fabric_1_21")
 includeClient("fabric_1_21_6")
 includeClient("fabric_1_21_11")
 includeClient("fabric_26_1")
+includeClient("fabric_26_2")
 //include(":client:forge_1_7_10")
-//project(":client:forge_1_7_10").projectDir = file("client/client/forge_1_7_10")
+//project(":client:forge_1_7_10").projectDir = file("client/forge_1_7_10")
 //include(":client:forge_1_12_2")
-//project(":client:forge_1_12_2").projectDir = file("client/client/forge_1_12_2")
+//project(":client:forge_1_12_2").projectDir = file("client/forge_1_12_2")
 includeClient("forge_1_16_5")
 includeClient("forge_1_20_1")
 includeClient("neoforge_1_21")
 includeClient("neoforge_1_21_6")
 includeClient("neoforge_1_21_11")
 includeClient("neoforge_26_1")
+includeClient("neoforge_26_2")
 
 include(":server")
 
@@ -45,9 +44,9 @@ include(":server:fabric_1_21")
 include(":server:fabric_1_21_6")
 include(":server:fabric_1_21_11")
 include(":server:fabric_26_1")
-
-//include(":server:forge_1_7_10")
-//include(":server:forge_1_12_2")
+include(":server:fabric_26_2")
+include(":server:forge_1_7_10")
+include(":server:forge_1_12_2")
 include(":server:forge_1_16_5")
 include(":server:forge_1_20_1")
 
@@ -55,11 +54,14 @@ include(":server:neoforge_1_21")
 include(":server:neoforge_1_21_6")
 include(":server:neoforge_1_21_11")
 include(":server:neoforge_26_1")
+include(":server:neoforge_26_2")
 
 include(":server:spigot")
 include(":server:paper")
 include(":server:folia")
 include(":server:velocity")
+
+include(":onejar")
 
 pluginManagement {
     repositories {

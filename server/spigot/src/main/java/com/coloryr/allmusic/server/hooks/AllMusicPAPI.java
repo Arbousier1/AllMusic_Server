@@ -1,8 +1,8 @@
 package com.coloryr.allmusic.server.hooks;
 
+import com.coloryr.allmusic.server.PluginMessage;
 import com.coloryr.allmusic.server.core.AllMusic;
 import com.coloryr.allmusic.server.core.music.PlayMusic;
-import com.coloryr.allmusic.server.PluginMessage;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -29,7 +29,7 @@ public class AllMusicPAPI extends PlaceholderExpansion {
 
     @Override
     public boolean register() {
-        AllMusic.log.data("<light_purple>[AllMusic3]<yellow>正在挂钩PlaceholderAPI");
+        AllMusic.log.data("<light_purple>[AllMusic]<yellow>正在挂钩PlaceholderAPI");
         return super.register();
     }
 

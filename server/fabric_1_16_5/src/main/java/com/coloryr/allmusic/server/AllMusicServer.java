@@ -1,10 +1,10 @@
 package com.coloryr.allmusic.server;
 
+import com.coloryr.allmusic.server.adventure.FabricServerAudiences;
 import com.coloryr.allmusic.server.core.AllMusic;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import com.coloryr.allmusic.server.adventure.FabricServerAudiences;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.LogManager;
@@ -18,8 +18,6 @@ public class AllMusicServer implements DedicatedServerModInitializer {
     public static MinecraftServer server;
     public static FabricServerAudiences audiences;
 
-    public static final String dir = "allmusic_server/";
-
     @Override
     public void onInitializeServer() {
 
@@ -32,7 +30,7 @@ public class AllMusicServer implements DedicatedServerModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register((a) -> {
             server = a;
             audiences = FabricServerAudiences.of(server);
-            AllMusic.init(new File(dir));
+            AllMusic.init(new File(AllMusic.SERVER_DIR));
             AllMusic.start();
             Tasks.init();
         });

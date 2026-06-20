@@ -17,17 +17,17 @@ public class CommandUnban extends ACommand {
         IMusicApi api = null;
 
         if (args.length == 2) {
-            api = AllMusic.getMusicApi(AllMusic.getConfig().defaultApi);
+            api = AllMusic.MUSIC_APIS.get(AllMusic.getConfig().defaultApi);
             musicID = args[1];
         } else if (args.length == 3) {
-            api = AllMusic.getMusicApi(args[1]);
+            api = AllMusic.MUSIC_APIS.get(args[1]);
             musicID = args[2];
         } else {
-            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Invalid command");
+            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic]<dark_green>错误的指令");
         }
 
         if (api == null) {
-            AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
+            AllMusic.side.sendMessage(sender, AllMusic.getMessage().musicPlay.error2);
             return;
         }
 
@@ -36,9 +36,9 @@ public class CommandUnban extends ACommand {
         if (api.checkId(musicID)) {
             api.setList(musicID, sender);
             BanSave.removeBanMusic(args[1], api.getId());
-            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>音乐API " + api.getId() + "已解封点歌" + musicID);
+            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic]<dark_green>音乐API " + api.getId() + "已解封点歌" + musicID);
         } else {
-            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic3]<dark_green>Please input a valid ID");
+            AllMusic.side.sendMessage(sender, "<light_purple>[AllMusic]<dark_green>请输入有效的ID");
         }
     }
 }

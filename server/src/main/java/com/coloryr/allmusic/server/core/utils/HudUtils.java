@@ -6,7 +6,6 @@ import com.coloryr.allmusic.server.core.music.LyricSave;
 import com.coloryr.allmusic.server.core.music.PlayMusic;
 import com.coloryr.allmusic.server.core.objs.config.LimitObj;
 import com.coloryr.allmusic.server.core.objs.message.ARG;
-import com.coloryr.allmusic.server.core.objs.music.SongInfoObj;
 import com.coloryr.allmusic.server.core.saves.HudSave;
 
 public class HudUtils {
@@ -257,7 +256,7 @@ public class HudUtils {
             try {
                 AllMusic.side.sendHudPos(player);
             } catch (Exception e1) {
-                AllMusic.log.data("<light_purple>[AllMusic3]<red>数据发送发生错误");
+                AllMusic.log.data("<light_purple>[AllMusic]<red>数据发送发生错误");
                 e1.printStackTrace();
             }
         });

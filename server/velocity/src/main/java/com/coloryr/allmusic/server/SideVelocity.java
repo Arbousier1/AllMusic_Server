@@ -1,13 +1,13 @@
 package com.coloryr.allmusic.server;
 
-import com.coloryr.allmusic.codec.MusicPacketCodec;
 import com.coloryr.allmusic.codec.MusicPack;
+import com.coloryr.allmusic.codec.MusicPacketCodec;
 import com.coloryr.allmusic.server.core.AllMusic;
+import com.coloryr.allmusic.server.core.IEconomy;
 import com.coloryr.allmusic.server.core.music.PlayMusic;
 import com.coloryr.allmusic.server.core.objs.music.PlayerAddMusicObj;
 import com.coloryr.allmusic.server.core.objs.music.SongInfoObj;
 import com.coloryr.allmusic.server.core.side.BaseSide;
-import com.coloryr.allmusic.server.core.IEconomy;
 import com.coloryr.allmusic.server.event.MusicAddEvent;
 import com.coloryr.allmusic.server.event.MusicPlayEvent;
 import com.google.common.io.ByteArrayDataOutput;
@@ -191,7 +191,7 @@ public class SideVelocity extends BaseSide implements IEconomy {
 
     @Override
     public void sendMessage(Object obj, Component message) {
-        if(obj instanceof CommandSource) {
+        if (obj instanceof CommandSource) {
             CommandSource source = (CommandSource) obj;
             source.sendMessage(message);
         }
@@ -320,7 +320,7 @@ public class SideVelocity extends BaseSide implements IEconomy {
             }
         }
         if (toServer == null) {
-            AllMusic.log.data("<light_purple>[AllMusic3]<red>没有找到目标服务器");
+            AllMusic.log.data("<light_purple>[AllMusic]<red>没有找到目标服务器");
             return false;
         }
 
@@ -343,7 +343,7 @@ public class SideVelocity extends BaseSide implements IEconomy {
                     Thread.sleep(1);
                     count++;
                 } else if (res == 0) {
-                    AllMusic.log.data("<light_purple>[AllMusic3]<red>后端经济插件错误");
+                    AllMusic.log.data("<light_purple>[AllMusic]<red>后端经济插件错误");
                     SendToBackend.remove(uuid);
                     return false;
                 } else if (res == 1) {
@@ -354,12 +354,12 @@ public class SideVelocity extends BaseSide implements IEconomy {
                     return true;
                 }
             } catch (Exception e) {
-                AllMusic.log.data("<light_purple>[AllMusic3]<red>经济数据发送错误");
+                AllMusic.log.data("<light_purple>[AllMusic]<red>经济数据发送错误");
                 e.printStackTrace();
             }
         } while (count < 100);
 
-        AllMusic.log.data("<light_purple>[AllMusic3]<red>经济数据请求超时");
+        AllMusic.log.data("<light_purple>[AllMusic]<red>经济数据请求超时");
 
         return false;
     }

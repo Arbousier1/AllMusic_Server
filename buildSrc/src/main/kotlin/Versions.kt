@@ -1,5 +1,5 @@
 object Versions {
-    const val fabricLoom = "1.16-SNAPSHOT"
+    const val fabricLoom = "1.17-SNAPSHOT"
     const val architecturyLoom = "1.14-SNAPSHOT"
     const val httpclient5 = "5.6.1"
     const val httpcore5 = "5.4.2"

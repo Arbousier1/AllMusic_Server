@@ -25,14 +25,11 @@ import java.io.File;
 @Mod(modid = "allmusic_server", version = AllMusic.version, acceptableRemoteVersions = "*", acceptedMinecraftVersions = "[1.12,)")
 public class AllMusicServer {
     public static final Logger LOGGER = LogManager.getLogger("AllMusic Server");
-    public static MinecraftServer server;
-    public static FMLEventChannel channel;
-
-    public static final String dir = "config/allmusic_server/";
-
     private static final GsonComponentSerializer GSON_SERIALIZER = GsonComponentSerializer.builder()
             .downsampleColors()
             .build();
+    public static MinecraftServer server;
+    public static FMLEventChannel channel;
 
     public static ITextComponent parse(Component input) {
         String json = GSON_SERIALIZER.serialize(input);
@@ -50,12 +47,11 @@ public class AllMusicServer {
 
     @Mod.EventHandler
     public void onServerStarted(FMLServerStartedEvent event) {
-        AllMusic.init(new File(dir));
+        AllMusic.init(new File(AllMusic.SERVER_DIR));
         AllMusic.start();
         Tasks.init();
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @Mod.EventHandler
     public void onServerStarting(FMLServerStartingEvent event) {
         server = event.getServer();

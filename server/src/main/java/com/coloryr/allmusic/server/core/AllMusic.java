@@ -1,8 +1,9 @@
 package com.coloryr.allmusic.server.core;
 
-import com.coloryr.allmusic.server.core.lifecycle.AllMusicRuntimeLifecycle;
-import com.coloryr.allmusic.server.core.music.MusicApiRegistry;
+import com.coloryr.allmusic.server.core.music.MusicHttpClient;
+import com.coloryr.allmusic.server.core.music.MusicSearch;
 import com.coloryr.allmusic.server.core.music.PlayMusic;
+import com.coloryr.allmusic.server.core.music.PlayRuntime;
 import com.coloryr.allmusic.server.core.objs.CookieObj;
 import com.coloryr.allmusic.server.core.objs.config.ConfigObj;
 import com.coloryr.allmusic.server.core.objs.message.MessageObj;
@@ -35,41 +36,10 @@ public class AllMusic {
             .create();
     public static final Random random = new Random();
 
-    private static final MusicApiRegistry musicApiRegistry = new MusicApiRegistry();
-    private static final AllMusicRuntimeLifecycle runtimeLifecycle = new AllMusicRuntimeLifecycle();
-    public static final Map<String, IMusicApi> MUSIC_APIS = musicApiRegistry.getApis();
+    public static final Map<String, IMusicApi> MUSIC_APIS = new HashMap<>();
 
-    public static void registerMusicApi(IMusicApi api, String... aliases) {
-        musicApiRegistry.register(api, aliases);
-    }
+    public static final String SERVER_DIR = "allmusic_server/";
 
-    public static IMusicApi getMusicApi(String api) {
-        return musicApiRegistry.get(api);
-    }
-
-    public static Collection<IMusicApi> getMusicApis(String api) {
-        return musicApiRegistry.getMany(api);
-    }
-
-    public static boolean hasMusicApis(String api) {
-        return musicApiRegistry.has(api);
-    }
-
-    public static String getMusicApiList() {
-        return musicApiRegistry.getApiList();
-    }
-
-    public static Collection<IMusicApi> getRegisteredMusicApis() {
-        return musicApiRegistry.getRegisteredApis();
-    }
-
-    public static boolean hasMusicApi() {
-        return musicApiRegistry.hasRegisteredApis();
-    }
-
-    public static String getUnknownApiMessage() {
-        return getMessage().musicPlay.error2 + " 可用: " + getMusicApiList();
-    }
     /**
      * 客户端插件信道名
      */
@@ -93,31 +63,31 @@ public class AllMusic {
     /**
      * 日志
      */
-    public static volatile IAllMusicLogger log;
+    public static IAllMusicLogger log;
     /**
      * 服务器端操作
      */
-    public static volatile BaseSide side;
+    public static BaseSide side;
     /**
      * 是否在运行
      */
-    public static volatile boolean isRun;
+    public static boolean isRun;
     /**
      * Cookie对象
      */
-    public static volatile List<CookieObj> cookie;
+    public static List<CookieObj> cookie;
     /**
      * 经济插件对象
      */
-    public static volatile IEconomy economy;
+    public static IEconomy economy;
     /**
      * 配置对象
      */
-    private static volatile ConfigObj config;
+    private static ConfigObj config;
     /**
      * 语言对象
      */
-    private static volatile MessageObj message;
+    private static MessageObj message;
     /**
      * 配置文件
      */
@@ -147,7 +117,7 @@ public class AllMusic {
     public static void configCheck() {
         if (config == null || config.check()) {
             config = ConfigObj.make();
-            log.data("<light_purple>[AllMusic3]<red>配置文件config.json错误，已覆盖");
+            log.data("<light_purple>[AllMusic]<red>配置文件config.json错误，已覆盖");
             saveConfig();
         }
     }
@@ -158,12 +128,16 @@ public class AllMusic {
     private static void messageCheck() {
         if (message == null || message.check()) {
             message = MessageObj.make();
-            log.data("<light_purple>[AllMusic3]<red>配置文件message.json错误，已覆盖");
+            log.data("<light_purple>[AllMusic]<red>配置文件message.json错误，已覆盖");
             saveMessage();
         }
     }
 
     /**
+     * 检查是否需要放歌
+     *
+     * @param name      用户名
+     * @param server    服务器名
      * @param checkPlay 是否检查正在播放的列表
      * @return 是否跳过放歌
      */
@@ -216,7 +190,7 @@ public class AllMusic {
      */
     public static ConfigObj getConfig() {
         if (config == null) {
-            log.data("<light_purple>[AllMusic3]<red>配置文件config.json错误，已使用默认配置文件");
+            log.data("<light_purple>[AllMusic]<red>配置文件config.json错误，已使用默认配置文件");
             config = ConfigObj.make();
         }
         return config;
@@ -229,7 +203,7 @@ public class AllMusic {
      */
     public static MessageObj getMessage() {
         if (message == null) {
-            log.data("<light_purple>[AllMusic3]<red>配置文件message.json错误，已使用默认配置文件");
+            log.data("<light_purple>[AllMusic]<red>配置文件message.json错误，已使用默认配置文件");
             message = MessageObj.make();
         }
         return message;
@@ -248,7 +222,7 @@ public class AllMusic {
             write.close();
             out.close();
         } catch (Exception e) {
-            log.data("<light_purple>[AllMusic3]<red>配置文件config.json保存错误");
+            log.data("<light_purple>[AllMusic]<red>配置文件config.json保存错误");
             e.printStackTrace();
         }
     }
@@ -263,7 +237,7 @@ public class AllMusic {
             write.close();
             out.close();
         } catch (Exception e) {
-            log.data("<light_purple>[AllMusic3]<red>配置文件message.json保存错误");
+            log.data("<light_purple>[AllMusic]<red>配置文件message.json保存错误");
             e.printStackTrace();
         }
     }
@@ -280,7 +254,7 @@ public class AllMusic {
             write.write(data);
             write.close();
         } catch (Exception e) {
-            log.data("<light_purple>[AllMusic3]<red>配置文件cookie.json保存错误");
+            log.data("<light_purple>[AllMusic]<red>配置文件cookie.json保存错误");
             e.printStackTrace();
         }
     }
@@ -291,20 +265,24 @@ public class AllMusic {
     public static void start() {
         isRun = true;
 
-        runtimeLifecycle.startRuntime();
-        musicApiRegistry.clear();
+        MusicHttpClient.init();
+
+        PlayMusic.start();
+        PlayRuntime.start();
+        MusicSearch.start();
+        SaveTask.start();
 
         List<IMusicApi> list = MusicApiLoader.loadFromDirectory(apis);
         for (IMusicApi item : list) {
-            AllMusic.log.data("<light_purple>[AllMusic3]<yellow>注册音乐API：" + item.getId());
-            registerMusicApi(item);
+            AllMusic.log.data("<light_purple>[AllMusic]<yellow>注册音乐API：" + item.getId());
+            MUSIC_APIS.put(item.getId(), item);
         }
 
         if (MUSIC_APIS.isEmpty()) {
-            AllMusic.log.data("<light_purple>[AllMusic3]<red>没有注册音乐");
+            AllMusic.log.data("<light_purple>[AllMusic]<red>没有注册音乐");
         }
 
-        log.data("<light_purple>[AllMusic3]<yellow>已启动-" + version);
+        log.data("<light_purple>[AllMusic]<yellow>已启动-" + version);
     }
 
     /**
@@ -312,8 +290,10 @@ public class AllMusic {
      */
     public static void stop() {
         isRun = false;
-        runtimeLifecycle.stopRuntime(side);
-        log.data("<light_purple>[AllMusic3]<dark_green><yellow>已停止，感谢使用");
+        PlayRuntime.stop();
+        SaveTask.stop();
+        side.sendStop();
+        log.data("<light_purple>[AllMusic]<dark_green><yellow>已停止，感谢使用");
     }
 
     /**
@@ -336,11 +316,11 @@ public class AllMusic {
             reader.close();
             messageCheck();
 
-            log.data("<light_purple>[AllMusic3]<yellow>当前语言配置文件版本为：" + messageVersion
+            log.data("<light_purple>[AllMusic]<yellow>当前语言配置文件版本为：" + messageVersion
                     + "，你的语言文件版本为：" + message.version);
 
             if (!message.version.equalsIgnoreCase(messageVersion)) {
-                log.data("<light_purple>[AllMusic3]<red>语言文件版本号错误，运行可能会发生问题，请删除后重载");
+                log.data("<light_purple>[AllMusic]<red>语言文件版本号错误，运行可能会发生问题，请删除后重载");
             }
 
             reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()), StandardCharsets.UTF_8);
@@ -355,11 +335,11 @@ public class AllMusic {
                 saveCookie();
             }
 
-            log.data("<light_purple>[AllMusic3]<yellow>当前插件配置文件版本为：" + configVersion
+            log.data("<light_purple>[AllMusic]<yellow>当前插件配置文件版本为：" + configVersion
                     + "，你的配置文件版本为：" + config.version);
 
             if (!AllMusic.configVersion.equalsIgnoreCase(config.version)) {
-                log.data("<light_purple>[AllMusic3]<red>请及时更新配置文件");
+                log.data("<light_purple>[AllMusic]<red>请及时更新配置文件");
             }
 
             replacer = new StringReplacer();
@@ -373,7 +353,7 @@ public class AllMusic {
             HudSave.loadHud();
             MusicListSave.loadMusic();
         } catch (Exception e) {
-            log.data("<light_purple>[AllMusic3]<red>读取配置文件错误");
+            log.data("<light_purple>[AllMusic]<red>读取配置文件错误");
             e.printStackTrace();
         }
     }
@@ -435,7 +415,7 @@ public class AllMusic {
      * @param file 配置文件文件夹
      */
     public static void init(File file) {
-        log.data("<light_purple>[AllMusic3]<yellow>正在启动，感谢使用，本插件交流群：571239090");
+        log.data("<light_purple>[AllMusic]<yellow>正在启动，感谢使用，本插件交流群：571239090");
         try {
             file.mkdir();
 
@@ -464,7 +444,7 @@ public class AllMusic {
             isRun = true;
         } catch (IOException e) {
             isRun = false;
-            log.data("<light_purple>[AllMusic3]<red>启动失败");
+            log.data("<light_purple>[AllMusic]<red>启动失败");
             e.printStackTrace();
         }
     }

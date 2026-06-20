@@ -1,245 +1,76 @@
 <div align="center">
 
-![AllMusic_Server](https://socialify.git.ci/Coloryr/AllMusic_Server/image?description=1&font=Inter&forks=1&logo=https%3A%2F%2Fgithub.com%2FColoryr%2FAllMusic_Server%2Fblob%2Fmain%2Fforge_1_12_2%2Fsrc%2Fmain%2Fresources%2Ficon.png%3Fraw%3Dtrue&name=1&owner=1&pattern=Signal&stargazers=1&theme=Auto)
+![AllMusic](https://socialify.git.ci/Coloryr/AllMusic/image?description=1&font=Inter&forks=1&logo=https%3A%2F%2Fgithub.com%2FColoryr%2FAllMusic%2Fblob%2Fmain%2Fserver%2Fneoforge_26_1%2Fsrc%2Fmain%2Fresources%2Ficon.png%3Fraw%3Dtrue&name=1&owner=1&pattern=Signal&stargazers=1&theme=Auto)
 
-![](https://img.shields.io/bstats/players/6720?label=players&style=for-the-badge)
-![](https://img.shields.io/bstats/servers/6720?label=servers&style=for-the-badge)
-![](https://img.shields.io/badge/Version-3.8.0-blue?style=for-the-badge)
-![](https://img.shields.io/github/actions/workflow/status/Coloryr/AllMusic_Server/gradle.yml?style=for-the-badge)
-![](https://img.shields.io/github/license/Coloryr/AllMusic_Server?style=for-the-badge)
+![](https://img.shields.io/badge/Version-3.1.4-blue?style=for-the-badge)
+![](https://img.shields.io/github/actions/workflow/status/Coloryr/AllMusic/gradle.yml?style=for-the-badge)
+![](https://img.shields.io/github/license/Coloryr/AllMusic?style=for-the-badge)
 
 </div>
 
-**不提供技术支持**
-
-**仅适用于中国大陆网络环境**
-
-**AllMusic 4.0制作中**
-暂时设想
-
-- 圆形图片渲染将分为3层 底层 圆形图片覆盖层 顶层，例如底层放唱片机，覆盖层放唱片覆盖，让其看起来像唱片，顶层指针唱片
-- 播放进度条3张图片 未播放 指针 已播放
-- 字体过长滚动，例如信息设置最大值后横向滚动，待播放列表纵向滚动，然后每一待播放显示一段时间
-- 删除音乐API，需要自己另外装
-- 删除sqlite，改用文件存储数据
-
 ![GIF.gif](img/GIF.gif)
 
-需要配合客户端模组使用：
-[AllMusic_Client](https://github.com/Coloryr/AllMusic_Client)
+注：需要配合客户端Mod使用
+**不兼容旧版客户端Mod，需要新版客户端Mod**
+**如果面板服有问题，请自己去问服务器商给不给你用**
+**4.0服务器只能跟4.0客户端用，不兼容3.0的服务器或客户端**
 
-本项目是原项目的 fork。
-当前这个仓库主要维护服务端侧，客户端 / 模组侧仍然使用原项目提供的 `AllMusic_Client`，这里没有单独维护新的客户端模组。
-
-## 当前代码支持的平台
-
-以下内容按仓库中当前仍在维护的模块和构建脚本整理。
-
-### 服务端插件
-
-- Bukkit / Spigot / CraftBukkit
+插件支持的服务器
 - Paper
 - Folia
 - Velocity
 
-> 旧版 README 提到的 BungeeCord 目前在仓库中没有对应的可用实现，`server_top` 现为 Velocity 端实现，因此这里不再写 BungeeCord。
+模组支持的服务器
+- Forge
+- NeoForge
+- Fabric
 
-### 服务端模组
+## 使用方法
+1. 安装AllMusic_Server
 
-- Forge 1.7.10
-- Forge 1.12.2
-- Forge 1.16.5
-- Forge 1.20.1
-- NeoForge 1.21
-- NeoForge 1.21.6
-- NeoForge 1.21.11
-- Fabric 1.16.5
-- Fabric 1.20.1
-- Fabric 1.21
-- Fabric 1.21.6
-- Fabric 1.21.11
-- Fabric 26.1 snapshot
+Paper服务器
+复制`[paper]AllMusic_Server-4.0.0-all.jar`到你的`plugins`文件夹
+Velocity服务器
+复制`[velocity]AllMusic_Server-4.0.0-all.jar`到你的`plugins`文件夹
+Forge/Fabric/NeoForge类服务器
+复制`[xxx-xxx]AllMusic_Server-4.0.0-all.jar`到你的`mods`文件夹
 
-### 当前内置音源 API
+2. 安装客户端mod
+复制`[xxx-xxx]AllMusic_Client-4.0.0-all`到客户端的`mods`文件夹
+重启客户端
 
-- 网易云音乐 `netease`
-- QQ 音乐 `qq`
-- 酷狗音乐 `kugou`
-- 酷我音乐 `kuwo`
-
-## 安装方法
-
-### 1. 安装服务端
-
-- Bukkit / Spigot / Paper / Folia / Velocity：把对应构建产物放进 `plugins/`
-- Forge / NeoForge / Fabric：把对应构建产物放进 `mods/`
-
-当前构建产物命名大致如下：
-
-- `[bukkit_spigot]AllMusic_Server-xxx.jar`
-- `[paper]AllMusic_Server-xxx.jar`
-- `[folia]AllMusic_Server-xxx.jar`
-- `[velocity]AllMusic_Server-xxx.jar`
-- `[forge-版本]AllMusic_Server-xxx.jar`
-- `[neoforge-版本]AllMusic_Server-xxx.jar`
-- `[fabric-版本]AllMusic_Server-xxx.jar`
-
-### 2. 安装客户端
-
-客户端仍使用原项目的 `AllMusic_Client`。
-
-将对应版本的 `AllMusic_Client` 放入客户端 `mods/` 后重启游戏。
-
-## Cookie 导入
-
-VIP 曲目依赖 `cookie.json`。当前代码里已经支持直接通过命令导入，不需要再手动覆盖旧格式文件。
-
-支持导入的 API：
-
-- `netease`
-- `qq`
-- `kugou`
-- `kuwo`
-
-这些命令都会把结果写入插件/模组数据目录下的 `cookie.json`。
-
-### 方法 1：直接导入 Cookie Header
-
-适用平台：全部平台
-
-命令：
-
-```text
-/music cookie <api> <cookie header>
-```
-
-示例：
-
-```text
-/music cookie netease MUSIC_U=xxxx; __csrf=xxxx
-/music cookie qq uin=xxxx; qm_keyst=xxxx
-```
-
-也支持这些别名命令：
-
-```text
-/music neteasecookie <cookie header>
-/music qqcookie <cookie header>
-/music kugoucookie <cookie header>
-/music kuwocookie <cookie header>
-```
-
-这里的 `<cookie header>` 必须是标准请求头格式，例如：
-
-```text
-name1=value1; name2=value2; name3=value3
-```
-
-### 方法 2：本地浏览器辅助导入
-
-适用平台：全部平台
-
-命令：
-
-```text
-/music importcookie <api>
-```
-
-示例：
-
-```text
-/music importcookie netease
-```
-
-执行后服务端会返回一个本地地址，例如 `http://127.0.0.1:xxxxx/import?...`。
-
-使用流程：
-
-1. 在运行游戏的本机浏览器里打开这个本地地址。
-2. 再按页面提示打开目标音乐站点并登录。
-3. 使用页面提供的 bookmarklet、控制台脚本，或手动粘贴 cookie。
-4. 成功后会自动写入 `cookie.json`。
-
-注意：
-
-- 这个方法只能拿到浏览器 JavaScript 可见的 cookie。
-- `HttpOnly` cookie 无法通过这个页面直接读取。
-- 如果站点关键 cookie 是 `HttpOnly`，请改用"方法 1"手动导入，或用"方法 3"读取浏览器数据库。
-
-### 方法 3：从 Windows 浏览器 Cookie 数据库导入
-
-适用平台：仅 Windows
-
-命令：
-
-```text
-/music importcookiedb <api>
-```
-
-示例：
-
-```text
-/music importcookiedb netease
-```
-
-当前实现说明：
-
-- 仅支持 Windows
-- 仅读取 Chromium 系浏览器配置
-- 当前代码会尝试读取 Microsoft Edge 和 Google Chrome
-- 结果会合并写入 `cookie.json`
-
-已知限制：
-
-- 新版 Chromium 如果使用 application-bound encryption（`v20`），该方式可能失败
-- 浏览器数据库被锁定时会尝试复制临时库，但仍可能失败
-
-## 管理员权限说明
-
-Cookie 导入命令属于管理员命令。
-
-- Bukkit / Spigot / Paper / Folia：`OP` 或 `config.json` 的 `adminList`
-- Forge / NeoForge / Fabric：权限等级 `2` 或 `config.json` 的 `adminList`
-- Velocity：控制台或 `config.json` 的 `adminList`
-
-## 常用命令
-
-普通玩家：
-
-- `/music <音乐ID或分享链接>`
-- `/music <api> <音乐ID>`
-- `/music search <关键字>`
-- `/music search <api> <关键字>`
-- `/music list`
-- `/music stop`
-- `/music vote`
-- `/music cancel <序号>`
-- `/music hud ...`
-
-管理员：
-
-- `/music reload`
-- `/music next`
-- `/music test <id>`
-- `/music test <api> <id>`
-- `/music addlist <歌单ID>`
-- `/music clearlist`
-- `/music ban <id>`
-- `/music unban <id>`
-- `/music cookie <api> <cookie header>`
-- `/music importcookie <api>`
-- `/music importcookiedb <api>`
+## 音乐API
+AllMusic不会内置音乐api，你想要正常使用需要自己安装
+这里提供一个参考api https://github.com/Coloryr/netapi
+`allmusic\api`文件夹放音乐api构建出来的jar，需要重启插件才能加载
 
 ## 构建
-
 1. 安装JDK25、Git
 2. 使用 `git submodule update --init --recursive` 初始化项目
-3. 使用 `gradlew build` 构建
+3. 使用 `gradlew :server:buildServer` 构建服务器
+4. 使用 `gradlew :client:buildClient` 构建客户端
+
+## PAPI变量
+> %allmusic_now_music_name% 歌曲名字
+> %allmusic_now_music_al% 歌曲专辑
+> %allmusic_now_music_alia% 歌曲原曲
+> %allmusic_now_music_author% 歌曲作者
+> %allmusic_now_music_call% 点歌人
+> %allmusic_now_music_info% 歌曲所有信息
+> %allmusic_list_size% 队列大小
+> %allmusic_music_list% 队列歌曲
+> %allmusic_lyric% 歌词
+> %allmusic_tlyric% 翻译的歌词
+
+## 更新日志
+
+```
+4.0.0：全新字体渲染，拆分音乐API
+```
 
 ## 配置文件说明
-
-配置文件采用json格式，需要遵守json编写的格式规范  
-- maxPlayList              最大歌曲数  
+配置文件采用json格式，需要遵守json编写的格式规范
+- maxPlayList              最大歌曲数
 - maxPlayerList            一个玩家最大可点数量，0代表不限制
 - minVote                  最小通过投票数
 - voteTime                 投票时间
@@ -247,51 +78,17 @@ Cookie 导入命令属于管理员命令。
 - defaultAddMusic          默认添加歌曲方式，1为搜歌
 - ktvLyricDelay            KTV模式歌词延迟，单位毫秒
 - adminList                管理员列表
-- muteServer               不参与点歌的服务器列表
-- mutePlayer               不参与点歌的玩家列表
-- banMusic                 禁止点歌ID列表，ID为音乐ID
-- banPlayer                禁止玩家点歌列表
 - playListSwitch           是否玩家点歌后是否直接从空闲歌单切换至玩家歌曲
 - playListRandom           是否空闲歌单随机播放
 - sendLyric                是否发送歌词到客户端
 - needPermission           是否指令需要权限
-- topAPI                  是否启用顶层模式，用于和BC交换数据
+- topAPI                   是否启用顶层模式，用于和BC交换数据
 - mutePlayMessage          是否不发送播放信息
 - muteAddMessage           是否不发送点歌信息
 - showInBar                是否将信息限制在bar处
 - ktvMode                  是否启用KTV歌词
 - musicBR                  歌曲音质
 - version                  配置文件版本号
-- defaultHud               默认Hud配置
-    - list                 播放列表Hud配置
-        - x                x轴间距
-        - y                y轴间距
-        - dir              对齐方式
-        - color            字体颜色
-        - shadow           是否显示字体阴影
-        - enable           是否启用
-    - lyric                歌词Hud配置
-        - x
-        - y
-        - dir  
-        - color 
-        - shadow 
-        - enable 
-    - info                 歌曲信息Hud配置
-        - x
-        - y
-        - dir
-        - color
-        - shadow
-        - enable
-    - pic                  图片显示配置
-        - x
-        - y
-        - dir
-        - color            图片尺寸
-        - shadow           是否开启图片旋转
-        - enable
-    - picRotateSpeed       图片旋转速度
 - economy                  经济扩展配置
     - mysqlUrl             目前无用
     - backend              目前无用
@@ -317,8 +114,7 @@ Cookie 导入命令属于管理员命令。
 - defaultApi               默认音乐API
 
 ## 指令说明
-
-普通玩家指令  
+普通玩家指令
 - /music [音乐ID/网易云分享链接] 点歌
 - /music [音乐API] [音乐ID] 点歌
 - /music stop 停止播放歌曲
@@ -346,13 +142,7 @@ Cookie 导入命令属于管理员命令。
 - /music hud pic rotate [开关] 设置图片旋转模式
 - /music hud pic speed [数值] 设置图片旋转速度
 
-以下方式才是管理员  
-- 在配置文件给自己管理员
-- bukkit/spigot/paper/folia 服务器给自己op
-- forge/fabric/neoforge 服务器给自己等级权限2
-- bc/velocity 只能在配置文件写上自己的游戏名
-
-管理员指令 
+管理员指令
 - /music reload 重读配置文件
 - /music next 强制切歌
 - /music ban [ID] 禁止点这首歌
@@ -369,7 +159,7 @@ Cookie 导入命令属于管理员命令。
 - /music test [ID] 测试歌曲内容解析
 - /music test [音乐API] [ID] 测试歌曲内容解析
 
-若开启权限后  
+若开启权限后
 - 点歌需要权限`allmusic.addmusic`
 - 搜歌需要权限`allmusic.search`
 - 插歌需要权限`allmusic.push`
