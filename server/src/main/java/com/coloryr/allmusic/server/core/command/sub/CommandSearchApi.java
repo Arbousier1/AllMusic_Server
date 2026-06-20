@@ -13,20 +13,25 @@ public class CommandSearchApi extends ACommand {
             AllMusic.side.sendMessage(sender, AllMusic.getMessage().search.noPer);
             return;
         }
+
         if (CommandEX.checkMoney(sender, name, AllMusic.getConfig().cost.searchCost)) {
             return;
         }
+
         if (CommandEX.cost(sender, name, AllMusic.getConfig().cost.searchCost,
                 AllMusic.getMessage().cost.search)) {
             return;
         }
 
-        if (args.length < 2) {
-            AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
+        if (args.length < 3) {
+            AllMusic.side.sendMessage(sender, AllMusic.getMessage().musicPlay.error2);
             return;
         }
 
+        String[] newArgs = new String[args.length - 1];
+        System.arraycopy(args, 1, newArgs, 0, newArgs.length);
+
         AllMusic.side.sendMessage(sender, AllMusic.getMessage().search.startSearch);
-        CommandEX.searchMusicApi(sender, name, args, false);
+        CommandEX.searchMusicApi(sender, name, newArgs, false);
     }
 }

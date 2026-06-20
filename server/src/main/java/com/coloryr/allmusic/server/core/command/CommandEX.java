@@ -121,7 +121,12 @@ public class CommandEX {
      * @param isDefault 是否是默认点歌方式
      */
     public static void searchMusicApi(Object sender, String name, String[] args, boolean isDefault) {
-        IMusicApi api = AllMusic.getMusicApi(args[1]);
+        if (args == null || args.length < 2) {
+            AllMusic.side.sendMessage(sender, AllMusic.getMessage().musicPlay.error2);
+            return;
+        }
+
+        IMusicApi api = AllMusic.getMusicApi(args[0]);
         if (api == null) {
             AllMusic.side.sendMessage(sender, AllMusic.getUnknownApiMessage());
             return;
@@ -130,8 +135,7 @@ public class CommandEX {
         PlayerAddMusicObj obj = new PlayerAddMusicObj();
         obj.sender = sender;
         obj.name = name;
-        obj.args = new String[args.length - 1];
-        System.arraycopy(args, 1, obj.args, 0, obj.args.length);
+        obj.args = args;
         obj.isDefault = isDefault;
         obj.api = api.getId();
 
