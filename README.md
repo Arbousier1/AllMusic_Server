@@ -15,6 +15,16 @@
 **如果面板服有问题，请自己去问服务器商给不给你用**
 **4.0服务器只能跟4.0客户端用，不兼容3.0的服务器或客户端**
 
+## 本 Fork 与上游的区别
+本仓库基于 [Coloryr/AllMusic_Server](https://github.com/Coloryr/AllMusic_Server)，并尽量持续合并上游更新。相比上游，本 fork 额外保留/维护了这些内容：
+
+- 音乐 API 适配代码：保留 `server/netapi` 下的 QQ Music 与 Meting 风格（网易云、酷狗、酷我、百度/千千）provider 源码，以及 QQ Music 连通性测试和报告；原有的外置 API jar 加载方式仍可用。
+- Cookie/登录辅助：增加 `/music cookie <api> <cookie>`、`/music importcookie`、`/music importcookiedb`、`/music qrlogin` 等命令和常用别名，方便手动导入 Cookie、本地浏览器辅助导入、Windows Chromium Cookie 数据库导入，以及网易云二维码登录。
+- 搜索与命令兼容：保留按指定 API 搜索的参数修复，并整理了搜索结果展示、分页/session 和 provider 文本处理相关代码，便于同时维护多个音源。
+- 播放与消息结构：将播放队列、播放状态、推送、投票和插件消息桥拆成独立类，减少核心播放逻辑的耦合。
+- 构建兼容：保留 `gradle/fallback-buffercodec` 兜底模块，并修复/调整 Paper、Velocity、ZXing、`MusicListSave` 等构建或迁移相关问题。
+- 注意：第三方音乐接口和 Cookie 登录会受平台策略、账号状态、地区与网络影响；如果接口失效，优先检查对应 provider 或外置 API jar。
+
 插件支持的服务器
 - Paper
 - Folia
@@ -40,9 +50,9 @@ Forge/Fabric/NeoForge类服务器
 重启客户端
 
 ## 音乐API
-AllMusic不会内置音乐api，你想要正常使用需要自己安装
-这里提供一个参考api https://github.com/Coloryr/netapi
-`allmusic\api`文件夹放音乐api构建出来的jar，需要重启插件才能加载
+上游版本默认使用外置音乐 API jar。你可以参考 https://github.com/Coloryr/netapi 构建 API，把 jar 放到 `allmusic_server/api` 文件夹，重启插件后加载。
+
+本 fork 额外保留了 `server/netapi` 下的部分 provider 源码和 Cookie/登录辅助能力，方便自己构建、调试或继续维护这些接口。实际可用性取决于第三方平台接口状态、账号登录状态和网络环境。
 
 ## 构建
 1. 安装JDK25、Git
