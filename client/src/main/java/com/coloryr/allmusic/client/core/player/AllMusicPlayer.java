@@ -305,6 +305,11 @@ public class AllMusicPlayer extends InputStream {
     public void closePlayer() {
         isClose = true;
         nowTask = null;
+        tasks.clear();
+        try {
+            streamClose();
+        } catch (Exception ignored) {
+        }
     }
 
     public void setMusic(String url) {
@@ -336,12 +341,18 @@ public class AllMusicPlayer extends InputStream {
 
     @Override
     public int read() throws IOException {
+        if (content == null) {
+            throw new IOException("stream closed");
+        }
         local++;
         return content.read();
     }
 
     @Override
     public int read(byte[] buf) throws IOException {
+        if (content == null) {
+            throw new IOException("stream closed");
+        }
         int temp = content.read(buf);
         local += temp;
         return temp;
@@ -362,11 +373,17 @@ public class AllMusicPlayer extends InputStream {
 
     @Override
     public synchronized int read(byte[] buf, int off, int len) throws IOException {
+        if (content == null) {
+            throw new IOException("stream closed");
+        }
         try {
             int temp = content.read(buf, off, len);
             local += temp;
             return temp;
         } catch (IOException e) {
+            if (isClose) {
+                throw e;
+            }
             connect();
             return this.read(buf, off, len);
         }
